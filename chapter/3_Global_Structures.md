@@ -4,227 +4,126 @@
 
 ## 3.1. 超级块
 
-The superblock records various information about the enclosing filesystem, such as block counts, inode counts, supported features, maintenance information, and more.
-
-If the sparse_super feature flag is set, redundant copies of the superblock and group descriptors are kept only in the groups whose group number is either 0 or a power of 3, 5, or 7. If the flag is not set, redundant copies are kept in all groups.
-
-The superblock checksum is calculated against the superblock structure, which includes the FS UUID.
-
-The ext4 superblock is laid out as follows in struct ext4_super_block:
-
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-s_inodes_count
-
-Total inode count.
-
-0x4
-
-__le32
-
-s_blocks_count_lo
-
-Total block count.
-
-0x8
-
-__le32
-
-s_r_blocks_count_lo
-
-This number of blocks can only be allocated by the super-user.
-
-0xC
-
-__le32
-
-s_free_blocks_count_lo
-
-Free block count.
-
-0x10
-
-__le32
-
-s_free_inodes_count
-
-Free inode count.
-
-0x14
-
-__le32
-
-s_first_data_block
-
-First data block. This must be at least 1 for 1k-block filesystems and is typically 0 for all other block sizes.
-
-0x18
-
-__le32
-
-s_log_block_size
-
-Block size is 2 ^ (10 + s_log_block_size).
-
-0x1C
-
-__le32
-
-s_log_cluster_size
-
-Cluster size is 2 ^ (10 + s_log_cluster_size) blocks if bigalloc is enabled. Otherwise s_log_cluster_size must equal s_log_block_size.
-
-0x20
-
-__le32
-
-s_blocks_per_group
-
-Blocks per group.
-
-0x24
-
-__le32
-
-s_clusters_per_group
-
-Clusters per group, if bigalloc is enabled. Otherwise s_clusters_per_group must equal s_blocks_per_group.
-
-0x28
-
-__le32
-
-s_inodes_per_group
-
-Inodes per group.
-
-0x2C
-
-__le32
-
-s_mtime
-
-Mount time, in seconds since the epoch.
-
-0x30
-
-__le32
-
-s_wtime
-
-Write time, in seconds since the epoch.
-
-0x34
-
-__le16
-
-s_mnt_count
-
-Number of mounts since the last fsck.
-
-0x36
-
-__le16
-
-s_max_mnt_count
-
-Number of mounts beyond which a fsck is needed.
-
-0x38
-
-__le16
-
-s_magic
-
-Magic signature, 0xEF53
-
-0x3A
-
-__le16
-
-s_state
-
-File system state. See super_state for more info.
-
-0x3C
-
-__le16
-
-s_errors
-
-Behaviour when detecting errors. See super_errors for more info.
-
-0x3E
-
-__le16
-
-s_minor_rev_level
-
-Minor revision level.
-
-0x40
-
-__le32
-
-s_lastcheck
-
-Time of last check, in seconds since the epoch.
-
-0x44
-
-__le32
-
-s_checkinterval
-
-Maximum time between checks, in seconds.
-
-0x48
-
-__le32
-
-s_creator_os
-
-Creator OS. See the table super_creator for more info.
-
-0x4C
-
-__le32
-
-s_rev_level
-
-Revision level. See the table super_revision for more info.
-
-0x50
-
-__le16
-
-s_def_resuid
-
-Default uid for reserved blocks.
-
-0x52
-
-__le16
-
-s_def_resgid
-
-Default gid for reserved blocks.
-
-These fields are for EXT4_DYNAMIC_REV superblocks only.
-
-Note: the difference between the compatible feature set and the incompatible feature set is that if there is a bit set in the incompatible feature set that the kernel doesn’t know about, it should refuse to mount the filesystem.
-
-e2fsck’s requirements are more strict; if it doesn’t know about a feature in either the compatible or incompatible feature set, it must abort and not try to meddle with things it doesn’t understand...
+超级块记录了有关包含文件系统的各种信息，如块计数、inode计数、支持的功能、维护信息等。
+
+如果设置了`sparse_super`功能标志，那么超级块和组描述符的冗余副本仅保存在组号为0或3、5、7的幂的组中。如果未设置该标志，则冗余副本保存在所有组中。
+
+超级块校验和是针对超级块结构计算的，其中包括文件系统UUID。
+
+ext4超级块在`struct ext4_super_block`中的布局如下：
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ---- | --- | ---- | --- |
+| 0x0 | __le32 | s_inodes_countinode | 总数。| 
+| 0x4 | __le32 | s_blocks_count_lo | 块总数。|
+| 0x8 | __le32 | s_r_blocks_count_lo | 这些块只能由超级用户分配。|
+| 0xC | __le32 | s_free_blocks_count_lo | 空闲块计数。|
+| 0x10 | __le32 | s_free_inodes_count | 空闲inode计数。|
+| 0x14 | __le32 | s_first_data_block | 第一个数据块。对于1k块文件系统，这必须至少为1，对于所有其他块大小，通常为0。|
+| 0x18 | __le32 | s_log_block_size | 块大小为2 ^ (10 + s_log_block_size)。|
+| 0x1C | __le32 | s_log_cluster_size | 如果启用了bigalloc，集群大小为2 ^ (10 + s_log_cluster_size)块。否则s_log_cluster_size | 必须等于s_log_block_size。|
+| 0x20 | __le32 | s_blocks_per_group | 每组块数。|
+| 0x24 | __le32 | s_clusters_per_group | 如果启用了bigalloc，则每组集群数。否则s_clusters_per_group必须等于s_blocks_per_group。|
+| 0x28 | __le32 | s_inodes_per_group | 每组inode数。0x2C__le32s_mtime挂载时间，从纪元开始的秒数。|
+| 0x30 | __le32 | s_wtime | 写入时间，从纪元开始的秒数。0x34__le16s_mnt_count自上次fsck以来的挂载次数。|
+| 0x36 | __le16 | s_max_mnt_count | 超过此挂载次数需要进行fsck。|
+| 0x38 | __le16 | s_magic | 魔术签名，0xEF53 |
+| 0x3A | __le16 | s_state | 文件系统状态。更多信息请参见super_state。|
+| 0x3C | __le16 | s_errors | 检测到错误时的行为。更多信息请参见super_errors。|
+| 0x3E | __le16 | s_minor_rev_level | 次要修订级别。|
+| 0x40 | __le32 | s_lastcheck | 上次检查时间，从纪元开始的秒数。|
+| 0x44 | __le32 | s_checkinterval | 检查之间的最大时间，以秒为单位。|
+| 0x48 | __le32 | s_creator_os | 创建操作系统。更多信息请参见super_creator表。|
+| 0x4C | __le32 | s_rev_level | 修订级别。更多信息请参见super_revision表。|
+| 0x50 | __le16 | s_def_resuid | 保留块的默认uid。0x52__le16s_def_resgid保留块的默认gid。|
+|      |      |  | 这些字段仅适用于`EXT4_DYNAMIC_REV`超级块。<br>注意：兼容功能集和不兼容功能集之间的区别在于，如果内核不知道不兼容功能集中设置的位，它应该拒绝挂载文件系统。<br>  注：当系统挂载一个ext文件系统时，它会检查超级块中的功能集标志。如果发现兼容功能集中有不认识的功能，系统会忽略这些功能，但仍然挂载文件系统；而如果发现不兼容功能集中有不认识的功能，系统会拒绝挂载。 <br>`e2fsck`的要求更严格；如果它不了解兼容或不兼容功能集中的功能，它必须中止，不要尝试干预它不理解的东西... <br>
+|
+| ---- | ------ | ----------- | ---------------- |
+| 0x54 | __le32 | s_first_ino | 第一个非保留inode。 |
+| 0x58 | __le16 | s_inode_size | inode结构的大小，以字节为单位。 |
+| 0x5A | __le16 | s_block_group_nr | 此超级块的块组#。 |
+| 0x5C | __le32 | s_feature_compat | 兼容功能集标志。即使内核不理解标志，它仍然可以读/写这个文件系统；fsck不应该这样做。更多信息请参见super_compat表。 |
+| 0x60 | __le32 | s_feature_incompat | 不兼容功能集。如果内核或fsck不理解这些位中的一个，它应该停止。更多信息请参见super_incompat表。 |
+| 0x64 | __le32 | s_feature_ro_compat | 只读兼容功能集。如果内核不理解这些位中的一个，它仍然可以以只读方式挂载。更多信息请参见super_rocompat表。 |
+| 0x68 | __u8 | s_uuid[16] | 卷的128位UUID。 |
+| 0x78 | char | s_volume_name[16] | 卷标。 |
+| 0x88 | char | s_last_mounted[64] | 文件系统上次挂载的目录。 |
+| 0xC8 | __le32 | s_algorithm_usage_bitmap | 用于压缩（在e2fsprogs/Linux中未使用） |
+
+性能提示。目录预分配只有在EXT4_FEATURE_COMPAT_DIR_PREALLOC标志打开时才会发生。
+
+| 0xCC | __u8 | s_prealloc_blocks | 尝试为...文件预分配的块数？（在e2fsprogs/Linux中未使用） |
+| 0xCD | __u8 | s_prealloc_dir_blocks | 为目录预分配的块数。（在e2fsprogs/Linux中未使用） |
+| 0xCE | __le16 | s_reserved_gdt_blocks | 为未来文件系统扩展保留的GDT条目数。 |
+
+仅当设置了EXT4_FEATURE_COMPAT_HAS_JOURNAL时，日志支持才有效。
+
+| 0xD0 | __u8 | s_journal_uuid[16] | 日志超级块的UUID |
+| 0xE0 | __le32 | s_journal_inum | 日志文件的inode号。 |
+| 0xE4 | __le32 | s_journal_dev | 如果设置了外部日志功能标志，则为日志文件的设备号。 |
+| 0xE8 | __le32 | s_last_orphan | 要删除的孤立inode列表的开始。 |
+| 0xEC | __le32 | s_hash_seed[4] | HTREE哈希种子。 |
+| 0xFC | __u8 | s_def_hash_version | 用于目录哈希的默认哈希算法。更多信息请参见super_def_hash。 |
+| 0xFD | __u8 | s_jnl_backup_type | 如果此值为0或EXT3_JNL_BACKUP_BLOCKS (1)，则s_jnl_blocks字段包含inode的i_block[]数组和i_size的副本。 |
+| 0xFE | __le16 | s_desc_size | 如果设置了64bit不兼容功能标志，则为组描述符的大小，以字节为单位。 |
+| 0x100 | __le32 | s_default_mount_opts | 默认挂载选项。更多信息请参见super_mountopts表。 |
+| 0x104 | __le32 | s_first_meta_bg | 如果启用了meta_bg功能，则为第一个元数据块组。 |
+| 0x108 | __le32 | s_mkfs_time | 文件系统创建时间，从纪元开始的秒数。 |
+| 0x10C | __le32 | s_jnl_blocks[17] | 日志inode的i_block[]数组的备份副本在前15个元素中，i_size_high和i_size分别在第16和第17个元素中。 |
+
+仅当设置了EXT4_FEATURE_COMPAT_64BIT时，64位支持才有效。
+
+| 0x150 | __le32 | s_blocks_count_hi | 块计数的高32位。 |
+| 0x154 | __le32 | s_r_blocks_count_hi | 保留块计数的高32位。 |
+| 0x158 | __le32 | s_free_blocks_count_hi | 空闲块计数的高32位。 |
+| 0x15C | __le16 | s_min_extra_isize | 所有inode至少有#字节。 |
+| 0x15E | __le16 | s_want_extra_isize | 新inode应保留#字节。 |
+| 0x160 | __le32 | s_flags | 杂项标志。更多信息请参见super_flags表。 |
+| 0x164 | __le16 | s_raid_stride | RAID步幅。这是在移动到下一个磁盘之前从磁盘读取或写入的逻辑块数。这会影响文件系统元数据的放置，希望使RAID存储更快。 |
+| 0x166 | __le16 | s_mmp_interval | 在多挂载防护(MMP)检查中等待的秒数。理论上，MMP是一种机制，用于在超级块中记录哪个主机和设备已挂载文件系统，以防止多次挂载。这个功能似乎没有实现... |
+| 0x168 | __le64 | s_mmp_block | 多挂载保护数据的块#。 |
+| 0x170 | __le32 | s_raid_stripe_width | RAID条带宽度。这是在返回到当前磁盘之前从磁盘读取或写入的逻辑块数。块分配器使用它来尝试减少RAID5/6中的读-修改-写操作数量。 |
+| 0x174 | __u8 | s_log_groups_per_flex | 灵活块组的大小为2 ^ s_log_groups_per_flex。 |
+| 0x175 | __u8 | s_checksum_type | 元数据校验和算法类型。唯一有效值为1 (crc32c)。 |
+| 0x176 | __le16 | s_reserved_pad |  |
+| 0x178 | __le64 | s_kbytes_written | 在其生命周期内写入此文件系统的KiB数。 |
+| 0x180 | __le32 | s_snapshot_inum | 活动快照的inode号。（在e2fsprogs/Linux中未使用。） |
+| 0x184 | __le32 | s_snapshot_id | 活动快照的顺序ID。（在e2fsprogs/Linux中未使用。） |
+| 0x188 | __le64 | s_snapshot_r_blocks_count | 为活动快照的未来使用保留的块数。（在e2fsprogs/Linux中未使用。） |
+| 0x190 | __le32 | s_snapshot_list | 磁盘上快照列表头的inode号。（在e2fsprogs/Linux中未使用。） |
+| 0x194 | __le32 | s_error_count | 看到的错误数。 |
+| 0x198 | __le32 | s_first_error_time | 第一次发生错误的时间，从纪元开始的秒数。 |
+| 0x19C | __le32 | s_first_error_ino | 第一次错误涉及的inode。 |
+| 0x1A0 | __le64 | s_first_error_block | 第一次错误涉及的块号。 |
+| 0x1A8 | __u8 | s_first_error_func[32] | 发生错误的函数名称。 |
+| 0x1C8 | __le32 | s_first_error_line | 发生错误的行号。 |
+| 0x1CC | __le32 | s_last_error_time | 最近一次错误的时间，从纪元开始的秒数。 |
+| 0x1D0 | __le32 | s_last_error_ino | 最近一次错误涉及的inode。 |
+| 0x1D4 | __le32 | s_last_error_line | 最近一次错误发生的行号。 |
+| 0x1D8 | __le64 | s_last_error_block | 最近一次错误涉及的块号。 |
+| 0x1E0 | __u8 | s_last_error_func[32] | 最近一次错误发生的函数名称。 |
+| 0x200 | __u8 | s_mount_opts[64] | 挂载选项的ASCIIZ字符串。 |
+| 0x240 | __le32 | s_usr_quota_inum | 用户配额文件的Inode号。 |
+| 0x244 | __le32 | s_grp_quota_inum | 组配额文件的Inode号。 |
+| 0x248 | __le32 | s_overhead_blocks | 文件系统中的开销块/集群。（这个字段总是零，这意味着内核动态计算它。） |
+| 0x24C | __le32 | s_backup_bgs[2] | 包含超级块备份的块组（如果sparse_super2） |
+| 0x254 | __u8 | s_encrypt_algos[4] | 使用中的加密算法。任何时候最多可以使用四种算法；有效的算法代码在下面的super_encrypt表中给出。 |
+| 0x258 | __u8 | s_encrypt_pw_salt[16] | 用于加密的string2key算法的盐。 |
+| 0x268 | __le32 | s_lpf_ino | lost+found的inode号 |
+| 0x26C | __le32 | s_prj_quota_inum | 跟踪项目配额的inode。 |
+| 0x270 | __le32 | s_checksum_seed | 用于metadata_csum计算的校验和种子。此值为crc32c(~0, $orig_fs_uuid)。 |
+| 0x274 | __u8 | s_wtime_hi | s_wtime字段的高8位。 |
+| 0x275 | __u8 | s_mtime_hi | s_mtime字段的高8位。 |
+| 0x276 | __u8 | s_mkfs_time_hi | s_mkfs_time字段的高8位。 |
+| 0x277 | __u8 | s_lastcheck_hi | s_lastcheck字段的高8位。 |
+| 0x278 | __u8 | s_first_error_time_hi | s_first_error_time字段的高8位。 |
+| 0x279 | __u8 | s_last_error_time_hi | s_last_error_time字段的高8位。 |
+| 0x27A | __u8 | s_pad[2] | 零填充。 |
+| 0x27C | __le16 | s_encoding | 文件名字符集编码。 |
+| 0x27E | __le16 | s_encoding_flags | 文件名字符集编码标志。 |
+| 0x280 | __le32 | s_orphan_file_inum | 孤立文件inode号。 |
+| 0x284 | __le32 | s_reserved[94] | 填充到块的末尾。 |
+| 0x3FC | __le32 | s_checksum | 超级块校验和。 |
 
 0x54
 

@@ -11,7 +11,7 @@ ext4以"块"为单位分配存储空间。一个块是由`1KiB`到`64KiB`之间�
 对于32位文件系统，限制如下：
 
 | 条目 | 1KiB | 2KiB | 4KiB | 64KiB |
-| :------: | ---- | ---- | ---- | ---- |
+| ------ | ---- | ---- | ---- | ---- |
 |块数| 2^32 | 2^32 | 2^32 | 2^32 |
 |inode数| 2^32 | 2^32 | 2^32 | 2^32 |
 | 文件系统大小 | 4TiB | 8TiB | 16TiB | 256TiB | 
@@ -26,7 +26,7 @@ ext4以"块"为单位分配存储空间。一个块是由`1KiB`到`64KiB`之间�
 对于64位文件系统，限制如下：
 
 | 条目 | 1KiB | 2KiB | 4KiB | 64KiB |
-| :-------: | ---- | ---- | ---- | ---- |
+| ------- | ---- | ---- | ---- | ---- |
 | 块数 | 2^64 | 2^64 | 2^64 | 2^64 |
 | inode数 | 2^32 | 2^32 | 2^32 | 2^32 |
 | 文件系统大小 | 16ZiB | 32ZiB | 64ZiB | 1YiB |
@@ -44,7 +44,6 @@ ext4以"块"为单位分配存储空间。一个块是由`1KiB`到`64KiB`之间�
 
 标准块组的布局大致如下（下面将分别讨论这些字段中的每一个）：
 
-
 |第0组填充|ext4超级块|组描述符|保留的GDT块|数据块位图|inode位图|inode表| 数据块|
 | ------ | -------- | ----- | -------- | -------- | ------ | ----- | ---- | 
 |1024字节|   1个块  | 多个块 |  多个块  |  1个块  |  1个块  | 多个块 | 更多块|
@@ -54,227 +53,168 @@ ext4以"块"为单位分配存储空间。一个块是由`1KiB`到`64KiB`之间�
 
 > 注：无论哪种情况，块0都会被标记为已使用。
 
-ext4驱动程序主要处理块组0中的超级块和组描述符。超级块和组描述符的冗余副本会写入磁盘上的一些块组中，以防磁盘开始部分损坏，尽管并非所有块组都必须托管冗余副本（详见下段）。如果组没有冗余副本，则块组从数据块位图开始。还要注意，当文件系统刚刚格式化时，mkfs将在块组描述符之后和块位图开始之前分配"保留GDT块"空间，以允许将来扩展文件系统。默认情况下，文件系统允许比原始文件系统大小增加1024倍。
+`ext4`驱动程序主要处理块组0中的超级块和组描述符。超级块和组描述符的冗余副本会写入磁盘上的一些块组中，以防磁盘开始部分损坏，尽管并非所有块组都必须托管冗余副本（详见下段）。如果组没有冗余副本，则块组从数据块位图开始。还要注意，当文件系统刚刚格式化时，mkfs将在块组描述符之后和块位图开始之前分配"保留GDT块"空间，以允许将来扩展文件系统。默认情况下，文件系统允许比原始文件系统大小增加1024倍。
 
-The ext4 driver primarily works with the superblock and the group descriptors that are found in block group 0. Redundant copies of the superblock and group descriptors are written to some of the block groups across the disk in case the beginning of the disk gets trashed, though not all block groups necessarily host a redundant copy (see following paragraph for more details). If the group does not have a redundant copy, the block group begins with the data block bitmap. Note also that when the filesystem is freshly formatted, mkfs will allocate “reserve GDT block” space after the block group descriptors and before the start of the block bitmaps to allow for future expansion of the filesystem. By default, a filesystem is allowed to increase in size by a factor of 1024x over the original filesystem size.
+> 注：在ext4文件系统中，有多个块组（block groups）。每个块组内部的布局可能不同，主要有两种不同类型的块组：
+>   1. 有冗余副本的块组：
+>   + 这些特定的块组会存储超级块和组描述符的备份副本
+>   + 这些块组的布局是：开头部分存放超级块备份 → 然后是组描述符表备份 → 然后才是数据块位图、inode位图等其他内容
+>   + 这些备份是为了文件系统恢复而设计的
+>   2. 没有冗余副本的块组：
+>   + 其他大多数块组不需要存储这些备份
+>   + 这些块组的布局是：直接从数据块位图开始 → 然后是inode位图等其他内容
+>   + 它们没有超级块和组描述符的副本，因此结构更简单
 
-inode表的位置由grp.bg_inode_table_*给出。它是一个连续的块范围，足够大以包含sb.s_inodes_per_group * sb.s_inode_size字节。
-
-The location of the inode table is given by grp.bg_inode_table_*. It is continuous range of blocks large enough to contain sb.s_inodes_per_group * sb.s_inode_size bytes.
+inode表的位置由`grp.bg_inode_table_*`给出。它是一个连续的块范围，足够大以包含`sb.s_inodes_per_group * sb.s_inode_size`字节。
 
 至于块组中项目的顺序，通常确定超级块和组描述符表（如果存在）将位于块组的开头。位图和inode表可以在任何地方，并且位图可能位于inode表之后，或者两者可能位于不同的组（flex_bg）。剩余空间用于文件数据块、间接块映射、扩展树块和扩展属性。
 
-As for the ordering of items in a block group, it is generally established that the super block and the group descriptor table, if present, will be at the beginning of the block group. The bitmaps and the inode table can be anywhere, and it is quite possible for the bitmaps to come after the inode table, or for both to be in different groups (flex_bg). Leftover space is used for file data blocks, indirect block maps, extent tree blocks, and extended attributes.
+> 在`ext4`文件系统中引入的`flex_bg`（灵活块组）特性确实允许位图和inode表位于不同的块组中。
 
-2.3. Flexible Block Groups
-Starting in ext4, there is a new feature called flexible block groups (flex_bg). In a flex_bg, several block groups are tied together as one logical block group; the bitmap spaces and the inode table space in the first block group of the flex_bg are expanded to include the bitmaps and inode tables of all other block groups in the flex_bg. For example, if the flex_bg size is 4, then group 0 will contain (in order) the superblock, group descriptors, data block bitmaps for groups 0-3, inode bitmaps for groups 0-3, inode tables for groups 0-3, and the remaining space in group 0 is for file data. The effect of this is to group the block group metadata close together for faster loading, and to enable large files to be continuous on disk. Backup copies of the superblock and group descriptors are always at the beginning of block groups, even if flex_bg is enabled. The number of block groups that make up a flex_bg is given by 2 ^ sb.s_log_groups_per_flex.
+## 2.3. 灵活块组
 
-2.4. Meta Block Groups
-Without the option META_BG, for safety concerns, all block group descriptors copies are kept in the first block group. Given the default 128MiB(2^27 bytes) block group size and 64-byte group descriptors, ext4 can have at most 2^27/64 = 2^21 block groups. This limits the entire filesystem size to 2^21 * 2^27 = 2^48bytes or 256TiB.
+从ext4开始，有一个新特性叫做灵活块组（flex_bg）。在flex_bg中，几个块组被绑定在一起作为一个逻辑块组；`flex_bg`第一个块组中的位图空间和inode表空间被扩展，以包含flex_bg中所有其他块组的位图和inode表。例如，如果`flex_bg`大小为4，那么组0将依次包含超级块、组描述符、组0-3的数据块位图、组0-3的inode位图、组0-3的inode表，组0中的剩余空间用于文件数据。这样做的效果是将块组元数据集中在一起以加快加载速度，并使大文件能够在磁盘上连续存储。超级块和组描述符的备份副本总是位于块组的开头，即使启用了flex_bg。组成flex_bg的块组数量由`2 ^ sb.s_log_groups_per_flex`给出。
 
-The solution to this problem is to use the metablock group feature (META_BG), which is already in ext3 for all 2.6 releases. With the META_BG feature, ext4 filesystems are partitioned into many metablock groups. Each metablock group is a cluster of block groups whose group descriptor structures can be stored in a single disk block. For ext4 filesystems with 4 KB block size, a single metablock group partition includes 64 block groups, or 8 GiB of disk space. The metablock group feature moves the location of the group descriptors from the congested first block group of the whole filesystem into the first group of each metablock group itself. The backups are in the second and last group of each metablock group. This increases the 2^21 maximum block groups limit to the hard limit 2^32, allowing support for a 512PiB filesystem.
+> 1. flex_bg的第一个块组(组0)会包含：
+> + 超级块
+> + 组描述符表
+> + 所有成员块组(例如0-3)的数据块位图
+> + 所有成员块组(例如0-3)的inode位图
+> + 所有成员块组(例如0-3)的inode表
+> + 以及组0自己的文件数据(剩余空间)
+>
+> 2. flex_bg内的其他块组(比如组1、2、3):
+> + 它们的元数据(位图和inode表)集中存放在组0中
+> + 这些块组几乎全部空间都用于存放文件数据
+> + 但它们仍会在开头包含超级块和组描述符的备份(如果配置了备份)
 
-The change in the filesystem format replaces the current scheme where the superblock is followed by a variable-length set of block group descriptors. Instead, the superblock and a single block group descriptor block is placed at the beginning of the first, second, and last block groups in a meta-block group. A meta-block group is a collection of block groups which can be described by a single block group descriptor block. Since the size of the block group descriptor structure is 64 bytes, a meta-block group contains 16 block groups for filesystems with a 1KB block size, and 64 block groups for filesystems with a 4KB blocksize. Filesystems can either be created using this new block group descriptor layout, or existing filesystems can be resized on-line, and the field s_first_meta_bg in the superblock will indicate the first block group using this new layout.
+## 2.4. 元块组
 
-Please see an important note about BLOCK_UNINIT in the section about block and inode bitmaps.
+在没有`META_BG`选项的情况下，出于安全考虑，所有块组描述符副本都保存在第一个块组中。考虑到默认128MiB（2^27字节）的块组大小和64字节的组描述符，ext4最多可以有2^27/64 = 2^21个块组。这将整个文件系统大小限制为2^21 * 2^27 = 2^48字节或256TiB。
 
-2.5. Lazy Block Group Initialization
-A new feature for ext4 are three block group descriptor flags that enable mkfs to skip initializing other parts of the block group metadata. Specifically, the INODE_UNINIT and BLOCK_UNINIT flags mean that the inode and block bitmaps for that group can be calculated and therefore the on-disk bitmap blocks are not initialized. This is generally the case for an empty block group or a block group containing only fixed-location block group metadata. The INODE_ZEROED flag means that the inode table has been initialized; mkfs will unset this flag and rely on the kernel to initialize the inode tables in the background.
+解决这个问题的方法是使用元块组特性（META_BG），这已经在ext3的所有2.6版本中使用。使用META_BG特性，ext4文件系统被分成许多元块组。每个元块组是一个块组集群，其组描述符结构可以存储在单个磁盘块中。对于具有4KB块大小的ext4文件系统，单个元块组分区包括64个块组，或8GiB的磁盘空间。元块组特性将组描述符的位置从整个文件系统的拥挤的第一个块组移到每个元块组本身的第一个组中。备份位于每个元块组的第二个和最后一个组中。这将`2^21`个最大块组限制增加到`2^32`的硬限制，允许支持512PiB的文件系统。
 
-By not writing zeroes to the bitmaps and inode table, mkfs time is reduced considerably. Note the feature flag is RO_COMPAT_GDT_CSUM, but the dumpe2fs output prints this as “uninit_bg”. They are the same thing.
+文件系统格式的变化取代了当前超级块后跟可变长度的块组描述符集的方案。相反，超级块和单个块组描述符块被放置在元块组中的第一个、第二个和最后一个块组的开头。元块组是可以由单个块组描述符块描述的块组集合。由于块组描述符结构的大小为64字节，对于具有1KB块大小的文件系统，元块组包含16个块组，对于具有4KB块大小的文件系统，元块组包含64个块组。文件系统可以使用这种新的块组描述符布局创建，或者现有文件系统可以在线调整大小，超级块中的`s_first_meta_bg`字段将指示使用这种新布局的第一个块组。
 
-2.6. Special inodes
-ext4 reserves some inode for special features, as follows:
+请参阅关于块和inode位图部分中关于`BLOCK_UNINIT`的重要说明。
 
-inode Number
+> 1. META_BG特性解决方案：
+> + 已在ext3的所有2.6版本中使用
+> + 将文件系统划分为多个"元块组"(meta block groups)
+> + 每个元块组是一个块组集群，其组描述符可存储在单个磁盘块中
+> + 例如：4KB块大小的文件系统中，一个元块组包含64个块组或8GiB空间
+> 2. 存储结构变化：
+> + 将组描述符从整个文件系统的第一个块组移动到每个元块组的第一个组
+> + 备份存储在每个元块组的第二个和最后一个组中
+> + 超级块和单个块组描述符块被放置在元块组中的第一个、第二个和最后一个块组的开头
 
-Purpose
+## 2.5. 延迟块组初始化
 
-0
+ext4的一个新特性是三个**块组描述符标志**，使mkfs能够跳过初始化块组元数据的其他部分。具体来说，`INODE_UNINIT`和`BLOCK_UNINIT`标志意味着该组的inode和块位图可以被计算，因此不初始化磁盘上的位图块。这通常是空块组或只包含固定位置块组元数据的块组的情况。`INODE_ZEROED`标志意味着inode表已经初始化；mkfs将取消设置此标志，并依靠内核在后台初始化inode表。
 
-Doesn’t exist; there is no inode 0.
+通过不向位图和inode表写入零，mkfs时间大大减少。注意，特性标志是`RO_COMPAT_GDT_CSUM`，但`dumpe2fs`输出打印为"uninit_bg"。它们是同一件事。
 
-1
+## 2.6. 特殊inode
 
-List of defective blocks.
+ext4为特殊功能保留一些inode，如下所示：
 
-2
+|inode编号|用途|
+|:--------:|---|
+|0|不存在；没有inode 0。|
+|1|有缺陷块的列表。|
+|2|根目录。|
+|3|用户配额。|
+|4|组配额。|
+|5|引导加载程序|
+|6|未删除目录。|
+|7|保留的组描述符inode。（"调整大小inode"）|
+|8|日志inode。|
+|9|"排除"inode，用于快照(?)|
+|10|复制inode，用于一些非上游功能？|
+|11|传统的第一个非保留inode。通常这是lost+found目录。参见超级块中的s_first_ino。|
 
-Root directory.
+注意，还有一些从非保留inode编号分配的inode用于其他文件系统功能，这些功能不从标准目录层次结构引用。这些通常从超级块引用。它们是：
 
-3
 
-User quota.
+| 超级块字段 | 描述 |
+| -------- | ---- | 
+|s_lpf_ino| lost+found目录的inode编号。|
+|s_prj_quota_inum|跟踪项目配额的配额文件的inode编号。|
+|s_orphan_file_inum|跟踪孤立inode的文件的inode编号。|
 
-4
+## 2.7. 块和Inode分配策略
 
-Group quota.
+ext4认识到（比ext3更好）数据局部性通常是文件系统期望的质量。在旋转磁盘上，将相关块保持在彼此附近减少了访问数据块时磁头执行器和磁盘必须执行的移动量，从而加速磁盘IO。在SSD上当然没有移动部件，但局部性可以增加每个传输请求的大小，同时减少请求的总数。这种局部性也可能会将写入集中在单个擦除块上，这可能会显著加快文件重写速度。因此，尽可能减少碎片化是有用的。
 
-5
+ext4用来对抗碎片化的第一个工具是**多块分配器**。当首次创建文件时，块分配器会推测性地为文件分配8KiB的磁盘空间，假设该空间将很快被写入。当文件关闭时，未使用的推测性分配当然会被释放，但如果推测正确（通常是小文件的完整写入情况），那么文件数据将以单个多块扩展写出。ext4使用的第二个相关技巧是**延迟分配**。在这种方案下，当文件需要更多块来吸收文件写入时，文件系统推迟决定磁盘上的确切位置，直到所有脏缓冲区都被写出到磁盘。通过不承诺特定位置，直到绝对必要（提交超时被击中，或调用`sync()`，或内核耗尽内存），希望文件系统能够做出更好的位置决策。
 
-Boot loader.
+ext4（和ext3）使用的第三个技巧是，它尝试将文件的数据块保持在与其inode相同的块组中。当文件系统首先必须读取文件的inode以了解文件的数据块在哪里，然后寻找到文件的数据块以开始I/O操作时，这减少了寻道惩罚。
 
-6
+> 注：**寻道惩罚**（Seek Penalty）指的是在磁盘存储系统中，由于磁头需要在磁盘的不同轨道之间移动（寻道）而导致的额外时间开销。
 
-Undelete directory.
+第四个技巧是，目录中的所有inode在可行的情况下都放在与目录相同的块组中。这里的工作假设是目录中的所有文件可能相关，因此尝试将它们都保持在一起是有用的。
 
-7
+第五个技巧是，磁盘卷被切成128MB的块组；这些迷你容器如上所述用于尝试维持数据局部性。然而，有一个故意的怪癖——当在根目录中创建目录时，inode分配器会扫描块组，并将该目录放入它能找到的负载最轻的块组中。这鼓励目录在磁盘上展开；随着顶级目录/文件blob填满一个块组，分配器简单地移动到下一个块组。据称这种方案平衡了块组上的负载，尽管作者怀疑那些不幸落在旋转驱动器末端的目录在性能方面得到了原始交易。
 
-Reserved group descriptors inode. (“resize inode”)
+当然，如果所有这些机制都失败了，可以使用`e4defrag`来对文件进行碎片整理。
 
-8
+## 2.8. 校验和
 
-Journal inode.
+从2012年初开始，元数据校验和被添加到所有主要的ext4和jbd2数据结构中。相关的特性标志是`metadata_csum`。期望的校验和算法在超级块中指示，尽管截至2012年10月，唯一支持的算法是crc32c。一些数据结构没有空间容纳完整的32位校验和，因此只存储低16位。启用64bit特性增加了数据结构大小，以便可以为许多数据结构存储完整的32位校验和。然而，现有的32位文件系统无法扩展以启用64位模式，至少不能在没有实验性`resize2fs`补丁的情况下这样做。
 
-9
+现有文件系统可以通过对底层设备运行`tune2fs -O metadata_csum`来添加校验和。如果`tune2fs`遇到缺少足够空闲空间以添加校验和的目录块，它将请求您运行`e2fsck -D`以使目录重建带有校验和。这有额外的好处，即从目录文件中删除空闲空间并重新平衡htree索引。如果您_忽略_此步骤，您的目录将不会受到校验和的保护！
 
-The “exclude” inode, for snapshots(?)
+下表描述了进入每种类型的校验和的数据元素。校验和函数是超级块描述的任何函数（截至2013年10月为crc32c），除非另有说明。
 
-10
+| 元数据 | 长度 | 成分 |
+|-------|-----|-----|
+| 超级块 | __le32 | 超级块中直到校验和字段的整个部分。UUID位于超级块内。|
+| MMP | __le32 | UUID + 整个MMP块直到校验和字段。|
+|扩展属性|__le32|UUID + 整个扩展属性块。校验和字段设置为零。|、
+|目录条目|__le32|UUID + inode编号 + inode生成 + 目录块直到包含校验和字段的假条目。|
+|HTREE节点|__le32|UUID + inode编号 + inode生成 + 所有有效扩展 + HTREE尾部。校验和字段设置为零。|
+|扩展|__le32|UUID + inode编号 + inode生成 + 整个扩展块直到校验和字段。|
+|位图|__le32或__le16|UUID + 整个位图。校验和存储在组描述符中，如果组描述符大小为32字节（即^64bit），则被截断。|
+|Inode|__le32|UUID + inode编号 + inode生成 + 整个inode。校验和字段设置为零。每个inode都有自己的校验和。|
+|组描述符|__le16|如果metadata_csum，则UUID + 组编号 + 整个描述符；否则如果gdt_csum，则crc16(UUID + 组编号 + 整个描述符)。在所有情况下，只存储低16位。|
 
-Replica inode, used for some non-upstream feature?
+## 2.9. 大分配
 
-11
+目前，块的默认大小为4KiB，这是大多数支持MMU的硬件上常见的页面大小。这是幸运的，因为ext4代码尚未准备好处理块大小超过页面大小的情况。然而，对于大多数都是巨大文件的文件系统，能够以多个块为单位分配磁盘块是可取的，以减少碎片化和元数据开销。bigalloc特性提供了这种能力。
 
-Traditional first non-reserved inode. Usually this is the lost+found directory. See s_first_ino in the superblock.
+bigalloc特性（EXT4_FEATURE_RO_COMPAT_BIGALLOC）改变ext4使用集群分配，使得ext4块分配位图中的每个位址2的幂次方数量的块。例如，如果文件系统主要存储4-32兆字节范围内的大文件，设置1兆字节的集群大小可能有意义。这意味着块分配位图中的每个位现在寻址256个4k块。这将2T文件系统的块分配位图总大小从64兆字节缩小到256千字节。这也意味着块组寻址32千兆字节而不是128兆字节，也减少了文件系统元数据的开销。
 
-Note that there are also some inodes allocated from non-reserved inode numbers for other filesystem features which are not referenced from standard directory hierarchy. These are generally reference from the superblock. They are:
+管理员可以在mkfs时设置块集群大小（存储在超级块的`s_log_cluster_size`字段中）；从那时起，块位图跟踪集群，而不是单个块。这意味着块组可以是几个千兆字节大小（而不仅仅是128MiB）；然而，最小分配单元变成一个集群，而不是一个块，即使对于目录也是如此。TaoBao有一个补丁集将"使用集群单位而不是块"扩展到扩展树，尽管不清楚这些补丁去了哪里——它们最终演变成"扩展树v2"，但截至2015年5月，该代码尚未登陆。
 
-Superblock field
+## 2.10. 内联数据
 
-Description
+内联数据特性旨在处理文件数据非常小，以至于可以轻松放入inode内部的情况，这（理论上）减少了磁盘块消耗并减少了寻道。如果文件小于60字节，则数据存储在`inode.i_block`中内联。如果文件的其余部分可以放入扩展属性空间，则它可能作为扩展属性"system.data"在inode主体（"ibody EA"）内找到。这当然限制了可以附加到inode的扩展属性数量。如果数据大小增加超出i_block + ibody EA，将分配一个常规块并将内容移动到该块。
 
-s_lpf_ino
+等待更改以压缩用于存储内联数据的扩展属性键，应该能够在256字节的inode中存储160字节的数据（截至2015年6月，当i_extra_isize为28时）。在此之前，由于inode空间使用效率低下，限制为156字节。
 
-Inode number of lost+found directory.
+内联数据特性需要"system.data"的扩展属性，即使属性值为零长度。
 
-s_prj_quota_inum
+### 2.10.1. 内联目录
 
-Inode number of quota file tracking project quotas
+i_block的前四个字节是父目录的inode编号。接下来是56字节的空间，用于目录条目数组；见`struct ext4_dir_entry`。如果inode主体中有"system.data"属性，EA值也是`struct ext4_dir_entry`的数组。注意，对于内联目录，i_block和EA空间被视为单独的dirent块；目录条目不能跨越两者。
 
-s_orphan_file_inum
+内联目录条目不进行校验和，因为inode校验和应保护所有内联数据内容。
 
-Inode number of file tracking orphan inodes.
+## 2.11. 大型扩展属性值
 
-2.7. Block and Inode Allocation Policy
-ext4 recognizes (better than ext3, anyway) that data locality is generally a desirably quality of a filesystem. On a spinning disk, keeping related blocks near each other reduces the amount of movement that the head actuator and disk must perform to access a data block, thus speeding up disk IO. On an SSD there of course are no moving parts, but locality can increase the size of each transfer request while reducing the total number of requests. This locality may also have the effect of concentrating writes on a single erase block, which can speed up file rewrites significantly. Therefore, it is useful to reduce fragmentation whenever possible.
+为了使ext4能够存储不适合inode或附加到inode的单个扩展属性块中的扩展属性值，`EA_INODE`特性允许我们将值存储在常规文件inode的数据块中。这个"EA inode"只从扩展属性名称索引链接，不得出现在目录条目中。inode的i_atime字段用于存储xattr值的校验和；i_ctime/i_version存储64位引用计数，这使得多个拥有inode之间可以共享大xattr值。为了向后兼容此特性的旧版本，i_mtime/i_generation可能存储对一个拥有inode的inode编号和i_generation的反向引用（在EA inode不被多个inode引用的情况下），以验证EA inode是正在访问的正确inode。
 
-The first tool that ext4 uses to combat fragmentation is the multi-block allocator. When a file is first created, the block allocator speculatively allocates 8KiB of disk space to the file on the assumption that the space will get written soon. When the file is closed, the unused speculative allocations are of course freed, but if the speculation is correct (typically the case for full writes of small files) then the file data gets written out in a single multi-block extent. A second related trick that ext4 uses is delayed allocation. Under this scheme, when a file needs more blocks to absorb file writes, the filesystem defers deciding the exact placement on the disk until all the dirty buffers are being written out to disk. By not committing to a particular placement until it’s absolutely necessary (the commit timeout is hit, or sync() is called, or the kernel runs out of memory), the hope is that the filesystem can make better location decisions.
+## 2.12. Verity文件
 
-The third trick that ext4 (and ext3) uses is that it tries to keep a file’s data blocks in the same block group as its inode. This cuts down on the seek penalty when the filesystem first has to read a file’s inode to learn where the file’s data blocks live and then seek over to the file’s data blocks to begin I/O operations.
+ext4支持fs-verity，这是一个文件系统特性，为单个只读文件提供基于Merkle树的哈希。大部分fs-verity对所有支持它的文件系统都是通用的；有关fs-verity文档，请参阅`Documentation/filesystems/fsverity.rst`。然而，verity元数据的磁盘布局是特定于文件系统的。在ext4上，verity元数据存储在文件数据本身的末尾之后，格式如下：
 
-The fourth trick is that all the inodes in a directory are placed in the same block group as the directory, when feasible. The working assumption here is that all the files in a directory might be related, therefore it is useful to try to keep them all together.
++ 零填充到下一个65536字节边界。这个填充实际上不需要在磁盘上分配，即它可能是一个空洞。
++ Merkle树，如`Documentation/filesystems/fsverity.rst`中所述，树级别按从根到叶的顺序存储，每个级别内的树块按其自然顺序存储。
++ 零填充到下一个文件系统块边界。
++ verity描述符，如`Documentation/filesystems/fsverity.rst`中所述，可选附加签名blob。
++ 零填充到距文件系统块边界4字节之前的下一个偏移量。
++ verity描述符的大小（以字节为单位），作为4字节小端整数。
 
-The fifth trick is that the disk volume is cut up into 128MB block groups; these mini-containers are used as outlined above to try to maintain data locality. However, there is a deliberate quirk -- when a directory is created in the root directory, the inode allocator scans the block groups and puts that directory into the least heavily loaded block group that it can find. This encourages directories to spread out over a disk; as the top-level directory/file blobs fill up one block group, the allocators simply move on to the next block group. Allegedly this scheme evens out the loading on the block groups, though the author suspects that the directories which are so unlucky as to land towards the end of a spinning drive get a raw deal performance-wise.
-
-Of course if all of these mechanisms fail, one can always use e4defrag to defragment files.
-
-2.8. Checksums
-Starting in early 2012, metadata checksums were added to all major ext4 and jbd2 data structures. The associated feature flag is metadata_csum. The desired checksum algorithm is indicated in the superblock, though as of October 2012 the only supported algorithm is crc32c. Some data structures did not have space to fit a full 32-bit checksum, so only the lower 16 bits are stored. Enabling the 64bit feature increases the data structure size so that full 32-bit checksums can be stored for many data structures. However, existing 32-bit filesystems cannot be extended to enable 64bit mode, at least not without the experimental resize2fs patches to do so.
-
-Existing filesystems can have checksumming added by running tune2fs -O metadata_csum against the underlying device. If tune2fs encounters directory blocks that lack sufficient empty space to add a checksum, it will request that you run e2fsck -D to have the directories rebuilt with checksums. This has the added benefit of removing slack space from the directory files and rebalancing the htree indexes. If you _ignore_ this step, your directories will not be protected by a checksum!
-
-The following table describes the data elements that go into each type of checksum. The checksum function is whatever the superblock describes (crc32c as of October 2013) unless noted otherwise.
-
-Metadata
-
-Length
-
-Ingredients
-
-Superblock
-
-__le32
-
-The entire superblock up to the checksum field. The UUID lives inside the superblock.
-
-MMP
-
-__le32
-
-UUID + the entire MMP block up to the checksum field.
-
-Extended Attributes
-
-__le32
-
-UUID + the entire extended attribute block. The checksum field is set to zero.
-
-Directory Entries
-
-__le32
-
-UUID + inode number + inode generation + the directory block up to the fake entry enclosing the checksum field.
-
-HTREE Nodes
-
-__le32
-
-UUID + inode number + inode generation + all valid extents + HTREE tail. The checksum field is set to zero.
-
-Extents
-
-__le32
-
-UUID + inode number + inode generation + the entire extent block up to the checksum field.
-
-Bitmaps
-
-__le32 or __le16
-
-UUID + the entire bitmap. Checksums are stored in the group descriptor, and truncated if the group descriptor size is 32 bytes (i.e. ^64bit)
-
-Inodes
-
-__le32
-
-UUID + inode number + inode generation + the entire inode. The checksum field is set to zero. Each inode has its own checksum.
-
-Group Descriptors
-
-__le16
-
-If metadata_csum, then UUID + group number + the entire descriptor; else if gdt_csum, then crc16(UUID + group number + the entire descriptor). In all cases, only the lower 16 bits are stored.
-
-2.9. Bigalloc
-At the moment, the default size of a block is 4KiB, which is a commonly supported page size on most MMU-capable hardware. This is fortunate, as ext4 code is not prepared to handle the case where the block size exceeds the page size. However, for a filesystem of mostly huge files, it is desirable to be able to allocate disk blocks in units of multiple blocks to reduce both fragmentation and metadata overhead. The bigalloc feature provides exactly this ability.
-
-The bigalloc feature (EXT4_FEATURE_RO_COMPAT_BIGALLOC) changes ext4 to use clustered allocation, so that each bit in the ext4 block allocation bitmap addresses a power of two number of blocks. For example, if the file system is mainly going to be storing large files in the 4-32 megabyte range, it might make sense to set a cluster size of 1 megabyte. This means that each bit in the block allocation bitmap now addresses 256 4k blocks. This shrinks the total size of the block allocation bitmaps for a 2T file system from 64 megabytes to 256 kilobytes. It also means that a block group addresses 32 gigabytes instead of 128 megabytes, also shrinking the amount of file system overhead for metadata.
-
-The administrator can set a block cluster size at mkfs time (which is stored in the s_log_cluster_size field in the superblock); from then on, the block bitmaps track clusters, not individual blocks. This means that block groups can be several gigabytes in size (instead of just 128MiB); however, the minimum allocation unit becomes a cluster, not a block, even for directories. TaoBao had a patchset to extend the “use units of clusters instead of blocks” to the extent tree, though it is not clear where those patches went-- they eventually morphed into “extent tree v2” but that code has not landed as of May 2015.
-
-2.10. Inline Data
-The inline data feature was designed to handle the case that a file’s data is so tiny that it readily fits inside the inode, which (theoretically) reduces disk block consumption and reduces seeks. If the file is smaller than 60 bytes, then the data are stored inline in inode.i_block. If the rest of the file would fit inside the extended attribute space, then it might be found as an extended attribute “system.data” within the inode body (“ibody EA”). This of course constrains the amount of extended attributes one can attach to an inode. If the data size increases beyond i_block + ibody EA, a regular block is allocated and the contents moved to that block.
-
-Pending a change to compact the extended attribute key used to store inline data, one ought to be able to store 160 bytes of data in a 256-byte inode (as of June 2015, when i_extra_isize is 28). Prior to that, the limit was 156 bytes due to inefficient use of inode space.
-
-The inline data feature requires the presence of an extended attribute for “system.data”, even if the attribute value is zero length.
-
-2.10.1. Inline Directories
-The first four bytes of i_block are the inode number of the parent directory. Following that is a 56-byte space for an array of directory entries; see struct ext4_dir_entry. If there is a “system.data” attribute in the inode body, the EA value is an array of struct ext4_dir_entry as well. Note that for inline directories, the i_block and EA space are treated as separate dirent blocks; directory entries cannot span the two.
-
-Inline directory entries are not checksummed, as the inode checksum should protect all inline data contents.
-
-2.11. Large Extended Attribute Values
-To enable ext4 to store extended attribute values that do not fit in the inode or in the single extended attribute block attached to an inode, the EA_INODE feature allows us to store the value in the data blocks of a regular file inode. This “EA inode” is linked only from the extended attribute name index and must not appear in a directory entry. The inode’s i_atime field is used to store a checksum of the xattr value; and i_ctime/i_version store a 64-bit reference count, which enables sharing of large xattr values between multiple owning inodes. For backward compatibility with older versions of this feature, the i_mtime/i_generation may store a back-reference to the inode number and i_generation of the one owning inode (in cases where the EA inode is not referenced by multiple inodes) to verify that the EA inode is the correct one being accessed.
-
-2.12. Verity files
-ext4 supports fs-verity, which is a filesystem feature that provides Merkle tree based hashing for individual readonly files. Most of fs-verity is common to all filesystems that support it; see Documentation/filesystems/fsverity.rst for the fs-verity documentation. However, the on-disk layout of the verity metadata is filesystem-specific. On ext4, the verity metadata is stored after the end of the file data itself, in the following format:
-
-Zero-padding to the next 65536-byte boundary. This padding need not actually be allocated on-disk, i.e. it may be a hole.
-
-The Merkle tree, as documented in Documentation/filesystems/fsverity.rst, with the tree levels stored in order from root to leaf, and the tree blocks within each level stored in their natural order.
-
-Zero-padding to the next filesystem block boundary.
-
-The verity descriptor, as documented in Documentation/filesystems/fsverity.rst, with optionally appended signature blob.
-
-Zero-padding to the next offset that is 4 bytes before a filesystem block boundary.
-
-The size of the verity descriptor in bytes, as a 4-byte little endian integer.
-
-Verity inodes have EXT4_VERITY_FL set, and they must use extents, i.e. EXT4_EXTENTS_FL must be set and EXT4_INLINE_DATA_FL must be clear. They can have EXT4_ENCRYPT_FL set, in which case the verity metadata is encrypted as well as the data itself.
-
-Verity files cannot have blocks allocated past the end of the verity metadata.
-
-Verity and DAX are not compatible and attempts to set both of these flags on a file will fail.
+Verity inode有`EXT4_VERITY_FL`设置，它们必须使用扩展，即必须设置`EXT4_EXTENTS_FL`，必须清除`EXT4_INLINE_DATA_FL`。它们可以设置`EXT4_ENCRYPT_FL`，在这种情况下，verity元数据以及数据本身都会被加密。
+Verity文件不能在verity元数据末尾之后分配块。
+Verity和DAX不兼容，尝试在文件上同时设置这两个标志将失败。
