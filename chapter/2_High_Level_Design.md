@@ -206,12 +206,12 @@ i_block的前四个字节是父目录的inode编号。接下来是56字节的空
 
 ## 2.12. Verity文件
 
-ext4支持fs-verity，这是一个文件系统特性，为单个只读文件提供基于Merkle树的哈希。大部分fs-verity对所有支持它的文件系统都是通用的；有关fs-verity文档，请参阅`Documentation/filesystems/fsverity.rst`。然而，verity元数据的磁盘布局是特定于文件系统的。在ext4上，verity元数据存储在文件数据本身的末尾之后，格式如下：
+ext4支持`fs-verity`，这是一个文件系统特性，为单个只读文件提供基于Merkle树的哈希。大部分fs-verity对所有支持它的文件系统都是通用的；有关fs-verity文档，请参阅`Documentation/filesystems/fsverity.rst`。然而，verity元数据的磁盘布局是特定于文件系统的。在ext4上，verity元数据存储在文件数据本身的末尾之后，格式如下：
 
 + 零填充到下一个65536字节边界。这个填充实际上不需要在磁盘上分配，即它可能是一个空洞。
 + Merkle树，如`Documentation/filesystems/fsverity.rst`中所述，树级别按从根到叶的顺序存储，每个级别内的树块按其自然顺序存储。
 + 零填充到下一个文件系统块边界。
-+ verity描述符，如`Documentation/filesystems/fsverity.rst`中所述，可选附加签名blob。
++ verity描述符，如`Documentation/filesystems/fsverity.rst`中所述，可选附加签名`blob`。
 + 零填充到距文件系统块边界4字节之前的下一个偏移量。
 + verity描述符的大小（以字节为单位），作为4字节小端整数。
 

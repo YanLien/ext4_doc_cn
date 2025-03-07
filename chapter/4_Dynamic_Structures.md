@@ -1,5 +1,6 @@
 # 4. 动态结构
-Dynamic metadata are created on the fly when files and blocks are allocated to files.
+
+动态元数据是在分配文件和块到文件时即时创建的。
 
 4.1. Index Nodes
 In a regular UNIX filesystem, the inode stores all the metadata pertaining to the file (time stamps, block maps, extended attributes, etc), not the directory entry. To find the information associated with a file, one must traverse the directory files to find the directory entry associated with a file, then load the inode to find the metadata for that file. ext4 appears to cheat (for performance reasons) a little bit by storing a copy of the file type (normally stored in the inode) in the directory entry. (Compare all this to FAT, which stores all the file information directly in the directory entry, but does not support hard links and is in general more seek-happy than ext4 due to its simpler block allocator and extensive use of linked lists.)

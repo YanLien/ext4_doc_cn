@@ -14,21 +14,21 @@ ext4超级块在`struct ext4_super_block`中的布局如下：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ---- | --- | ---- | --- |
-| 0x0 | __le32 | s_inodes_countinode | 总数。| 
-| 0x4 | __le32 | s_blocks_count_lo | 块总数。|
-| 0x8 | __le32 | s_r_blocks_count_lo | 这些块只能由超级用户分配。|
-| 0xC | __le32 | s_free_blocks_count_lo | 空闲块计数。|
-| 0x10 | __le32 | s_free_inodes_count | 空闲inode计数。|
+| 0x0 | `__le32` | `s_inodes_countinode` | 总数。| 
+| 0x4 | `__le32` | `s_blocks_count_lo` | 块总数。|
+| 0x8 | __le32 | `s_r_blocks_count_lo` | 这些块只能由超级用户分配。|
+| 0xC | __le32 | `s_free_blocks_count_lo` | 空闲块计数。|
+| 0x10 | __le32 | `s_free_inodes_count` | 空闲inode计数。|
 | 0x14 | __le32 | s_first_data_block | 第一个数据块。对于1k块文件系统，这必须至少为1，对于所有其他块大小，通常为0。|
-| 0x18 | __le32 | s_log_block_size | 块大小为2 ^ (10 + s_log_block_size)。|
-| 0x1C | __le32 | s_log_cluster_size | 如果启用了bigalloc，集群大小为2 ^ (10 + s_log_cluster_size)块。否则s_log_cluster_size | 必须等于s_log_block_size。|
+| 0x18 | __le32 | s_log_block_size | 块大小为`2 ^ (10 + s_log_block_size)`。|
+| 0x1C | __le32 | s_log_cluster_size | 如果启用了`bigalloc`，集群大小为`2 ^ (10 + s_log_cluster_size)`块。否则`s_log_cluster_size` | 必须等于s_log_block_size。|
 | 0x20 | __le32 | s_blocks_per_group | 每组块数。|
-| 0x24 | __le32 | s_clusters_per_group | 如果启用了bigalloc，则每组集群数。否则s_clusters_per_group必须等于s_blocks_per_group。|
+| 0x24 | __le32 | s_clusters_per_group | 如果启用了`bigalloc`，则每组集群数。否则`s_clusters_per_group`必须等于`s_blocks_per_group`。|
 | 0x28 | __le32 | s_inodes_per_group | 每组inode数。0x2C__le32s_mtime挂载时间，从纪元开始的秒数。|
 | 0x30 | __le32 | s_wtime | 写入时间，从纪元开始的秒数。0x34__le16s_mnt_count自上次fsck以来的挂载次数。|
 | 0x36 | __le16 | s_max_mnt_count | 超过此挂载次数需要进行fsck。|
 | 0x38 | __le16 | s_magic | 魔术签名，0xEF53 |
-| 0x3A | __le16 | s_state | 文件系统状态。更多信息请参见super_state。|
+| 0x3A | __le16 | s_state | 文件系统状态。更多信息请参见`super_state`。|
 | 0x3C | __le16 | s_errors | 检测到错误时的行为。更多信息请参见super_errors。|
 | 0x3E | __le16 | s_minor_rev_level | 次要修订级别。|
 | 0x40 | __le32 | s_lastcheck | 上次检查时间，从纪元开始的秒数。|
@@ -36,28 +36,22 @@ ext4超级块在`struct ext4_super_block`中的布局如下：
 | 0x48 | __le32 | s_creator_os | 创建操作系统。更多信息请参见super_creator表。|
 | 0x4C | __le32 | s_rev_level | 修订级别。更多信息请参见super_revision表。|
 | 0x50 | __le16 | s_def_resuid | 保留块的默认uid。0x52__le16s_def_resgid保留块的默认gid。|
-|      |      |  | 这些字段仅适用于`EXT4_DYNAMIC_REV`超级块。<br>注意：兼容功能集和不兼容功能集之间的区别在于，如果内核不知道不兼容功能集中设置的位，它应该拒绝挂载文件系统。<br>  注：当系统挂载一个ext文件系统时，它会检查超级块中的功能集标志。如果发现兼容功能集中有不认识的功能，系统会忽略这些功能，但仍然挂载文件系统；而如果发现不兼容功能集中有不认识的功能，系统会拒绝挂载。 <br>`e2fsck`的要求更严格；如果它不了解兼容或不兼容功能集中的功能，它必须中止，不要尝试干预它不理解的东西... <br>
-|
-| ---- | ------ | ----------- | ---------------- |
-| 0x54 | __le32 | s_first_ino | 第一个非保留inode。 |
-| 0x58 | __le16 | s_inode_size | inode结构的大小，以字节为单位。 |
-| 0x5A | __le16 | s_block_group_nr | 此超级块的块组#。 |
-| 0x5C | __le32 | s_feature_compat | 兼容功能集标志。即使内核不理解标志，它仍然可以读/写这个文件系统；fsck不应该这样做。更多信息请参见super_compat表。 |
-| 0x60 | __le32 | s_feature_incompat | 不兼容功能集。如果内核或fsck不理解这些位中的一个，它应该停止。更多信息请参见super_incompat表。 |
-| 0x64 | __le32 | s_feature_ro_compat | 只读兼容功能集。如果内核不理解这些位中的一个，它仍然可以以只读方式挂载。更多信息请参见super_rocompat表。 |
-| 0x68 | __u8 | s_uuid[16] | 卷的128位UUID。 |
-| 0x78 | char | s_volume_name[16] | 卷标。 |
-| 0x88 | char | s_last_mounted[64] | 文件系统上次挂载的目录。 |
-| 0xC8 | __le32 | s_algorithm_usage_bitmap | 用于压缩（在e2fsprogs/Linux中未使用） |
-
-性能提示。目录预分配只有在EXT4_FEATURE_COMPAT_DIR_PREALLOC标志打开时才会发生。
-
-| 0xCC | __u8 | s_prealloc_blocks | 尝试为...文件预分配的块数？（在e2fsprogs/Linux中未使用） |
-| 0xCD | __u8 | s_prealloc_dir_blocks | 为目录预分配的块数。（在e2fsprogs/Linux中未使用） |
-| 0xCE | __le16 | s_reserved_gdt_blocks | 为未来文件系统扩展保留的GDT条目数。 |
-
-仅当设置了EXT4_FEATURE_COMPAT_HAS_JOURNAL时，日志支持才有效。
-
+|      |      |  | 这些字段仅适用于`EXT4_DYNAMIC_REV`超级块。<br>注意：兼容功能集和不兼容功能集之间的区别在于，如果内核不知道不兼容功能集中设置的位，它应该拒绝挂载文件系统。<br>  注：当系统挂载一个ext文件系统时，它会检查超级块中的功能集标志。如果发现兼容功能集中有不认识的功能，系统会忽略这些功能，但仍然挂载文件系统；而如果发现不兼容功能集中有不认识的功能，系统会拒绝挂载。 <br>`e2fsck`的要求更严格；如果它不了解兼容或不兼容功能集中的功能，它必须中止，不要尝试干预它不理解的东西... <br>|
+| 0x54 | __le32 | `s_first_ino` | 第一个非保留inode。|
+| 0x58 | __le16 | `s_inode_size` | inode结构的大小，以字节为单位。|
+| 0x5A | __le16 | `s_block_group_nr` | 此超级块的块组#。|
+| 0x5C | `__le32` | `s_feature_compat` | 兼容功能集标志。即使内核不理解标志，它仍然可以读/写这个文件系统；fsck不应该这样做。更多信息请参见`super_compat`表。|
+| 0x60 | `__le32` | s_feature_incompat | 不兼容功能集。如果内核或fsck不理解这些位中的一个，它应该停止。更多信息请参见`super_incompat`表。|
+| 0x64 | `__le32` | s_feature_ro_compat | 只读兼容功能集。如果内核不理解这些位中的一个，它仍然可以以只读方式挂载。更多信息请参见super_rocompat表。|
+| 0x68 | `__u8` | s_uuid[16] | 卷的128位UUID。 |
+| 0x78 | `char` | s_volume_name[16] | 卷标。 |
+| 0x88 | `char` | s_last_mounted[64] | 文件系统上次挂载的目录。 |
+| 0xC8 | `__le32` | s_algorithm_usage_bitmap | 用于压缩（在`e2fsprogs/Linux`中未使用） |
+|  |  |  | 性能提示。目录预分配只有在`EXT4_FEATURE_COMPAT_DIR_PREALLOC`标志打开时才会发生。|
+| 0xCC | `__u8` | `s_prealloc_blocks` | 尝试为...文件预分配的块数？（在e2fsprogs/Linux中未使用） |
+| 0xCD |` __u8` | `s_prealloc_dir_blocks` | 为目录预分配的块数。（在e2fsprogs/Linux中未使用） |
+| 0xCE | `__le16` | `s_reserved_gdt_blocks` | 为未来文件系统扩展保留的GDT条目数。 |
+|  |  |  | 仅当设置了`EXT4_FEATURE_COMPAT_HAS_JOURNAL`时，日志支持才有效。|
 | 0xD0 | __u8 | s_journal_uuid[16] | 日志超级块的UUID |
 | 0xE0 | __le32 | s_journal_inum | 日志文件的inode号。 |
 | 0xE4 | __le32 | s_journal_dev | 如果设置了外部日志功能标志，则为日志文件的设备号。 |
@@ -70,1993 +64,486 @@ ext4超级块在`struct ext4_super_block`中的布局如下：
 | 0x104 | __le32 | s_first_meta_bg | 如果启用了meta_bg功能，则为第一个元数据块组。 |
 | 0x108 | __le32 | s_mkfs_time | 文件系统创建时间，从纪元开始的秒数。 |
 | 0x10C | __le32 | s_jnl_blocks[17] | 日志inode的i_block[]数组的备份副本在前15个元素中，i_size_high和i_size分别在第16和第17个元素中。 |
+|  |  |  |仅当设置了`EXT4_FEATURE_COMPAT_64BIT`时，64位支持才有效。|
+| `0x150` | `__le32` | `s_blocks_count_hi` | 块计数的高32位。 |
+| `0x154` | `__le32` | `s_r_blocks_count_hi` | 保留块计数的高32位。 |
+| `0x158` | `__le32` | `s_free_blocks_count_hi` | 空闲块计数的高32位。 |
+| `0x15C` | `__le16` | `s_min_extra_isize` | 所有inode至少有#字节。 |
+| `0x15E` | `__le16` | `s_want_extra_isize` | 新inode应保留#字节。 |
+| `0x160` | `__le32` | `s_flags` | 杂项标志。更多信息请参见super_flags表。 |
+| `0x164` | `__le16` | `s_raid_stride` | RAID步幅。这是在移动到下一个磁盘之前从磁盘读取或写入的逻辑块数。这会影响文件系统元数据的放置，希望使RAID存储更快。 |
+| `0x166` | `__le16` | `s_mmp_interval` | 在多挂载防护(MMP)检查中等待的秒数。理论上，MMP是一种机制，用于在超级块中记录哪个主机和设备已挂载文件系统，以防止多次挂载。这个功能似乎没有实现... |
+| `0x168` | `__le64` | `s_mmp_block` | 多挂载保护数据的块#。 |
+| `0x170` | `__le32` | `s_raid_stripe_width` | RAID条带宽度。这是在返回到当前磁盘之前从磁盘读取或写入的逻辑块数。块分配器使用它来尝试减少RAID5/6中的读-修改-写操作数量。 |
+| `0x174` | `__u8` | `s_log_groups_per_flex` | 灵活块组的大小为`2^s_log_groups_per_flex`。 |
+| `0x175` | `__u8` | `s_checksum_type` | 元数据校验和算法类型。唯一有效值为1 (crc32c)。 |
+| `0x176` | `__le16`| `s_reserved_pad` |  |
+| `0x178` | `__le64`| `s_kbytes_written` | 在其生命周期内写入此文件系统的KiB数。 |
+| `0x180` | `__le32`| `s_snapshot_inum` | 活动快照的inode号。（在`e2fsprogs/Linux`中未使用。） |
+| `0x184` | `__le32`| `s_snapshot_id` | 活动快照的顺序ID。（在`e2fsprogs/Linux`中未使用。） |
+| `0x188` | `__le64`| `s_snapshot_r_blocks_count` | 为活动快照的未来使用保留的块数。（在`e2fsprogs/Linux`中未使用。） |
+| `0x190` | `__le32`| `s_snapshot_list` | 磁盘上快照列表头的inode号。（在`e2fsprogs/Linux`中未使用。） |
+| `0x194` | `__le32`| `s_error_count` | 看到的错误数。 |
+| `0x198` | `__le32`| `s_first_error_time` | 第一次发生错误的时间，从纪元开始的秒数。 |
+| `0x19C` | `__le32`| `s_first_error_ino` | 第一次错误涉及的inode。 |
+| `0x1A0` | `__le64`| `s_first_error_block` | 第一次错误涉及的块号。 |
+| `0x1A8` | `__u8` |`s_first_error_func[32]` | 发生错误的函数名称。 |
+| `0x1C8` | `__le32`| `s_first_error_line` | 发生错误的行号。 |
+| `0x1CC` | `__le32`| `s_last_error_time` | 最近一次错误的时间，从纪元开始的秒数。 |
+| `0x1D0` | `__le32`| `s_last_error_ino` | 最近一次错误涉及的inode。 |
+| `0x1D4` | `__le32`| `s_last_error_line` | 最近一次错误发生的行号。 |
+| `0x1D8` | `__le64`| `s_last_error_block` | 最近一次错误涉及的块号。 |
+| `0x1E0` | `__u8` |`s_last_error_func[32]` | 最近一次错误发生的函数名称。 |
+| `0x200` | `__u8` |`s_mount_opts[64]` | 挂载选项的ASCIIZ字符串。 |
+| `0x240` | `__le32`| `s_usr_quota_inum` | 用户配额文件的Inode号。 |
+| `0x244` | `__le32`| `s_grp_quota_inum` | 组配额文件的Inode号。 |
+| `0x248` | `__le32`| `s_overhead_blocks` | 文件系统中的开销块/集群。（这个字段总是零，这意味着内核动态计算它。） |
+| `0x24C` | `__le32`| `s_backup_bgs[2]` | 包含超级块备份的块组（如果`sparse_super2`） |
+| `0x254` | `__u8` | `s_encrypt_algos[4]` | 使用中的加密算法。任何时候最多可以使用四种算法；有效的算法代码在下面的`super_encrypt`表中给出。 |
+| `0x258` | `__u8` | `s_encrypt_pw_salt[16]` | 用于加密的`string2key`算法的盐。 |
+| `0x268` | `__le32` | `s_lpf_ino` | `lost+found`的inode号 |
+| `0x26C` | `__le32` | `s_prj_quota_inum` | 跟踪项目配额的inode。 |
+| `0x270` | `__le32` | `s_checksum_seed` | 用于`metadata_csum`计算的校验和种子。此值为`crc32c(~0, $orig_fs_uuid)`。 |
+| `0x274` | `__u8` | `s_wtime_hi` | `s_wtime`字段的高8位。 |
+| `0x275` | `__u8` | `s_mtime_hi` | `s_mtime`字段的高8位。 |
+| `0x276` | `__u8` | `s_mkfs_time_hi` | `s_mkfs_time`字段的高8位。 |
+| `0x277` | `__u8` | `s_lastcheck_hi` | `s_lastcheck`字段的高8位。 |
+| `0x278` | `__u8` | `s_first_error_time_hi` | `s_first_error_time`字段的高8位。 |
+| `0x279` | `__u8` | `s_last_error_time_hi` | `s_last_error_time`字段的高8位。 |
+| `0x27A` | `__u8` | `s_pad[2]` | 零填充。 |
+| `0x27C` | `__le16` | `s_encoding` | 文件名字符集编码。 |
+| `0x27E` | `__le16` | `s_encoding_flags` | 文件名字符集编码标志。 |
+| `0x280` | `__le32` | `s_orphan_file_inum` | 孤立文件inode号。 |
+| `0x284` | `__le32` | `s_reserved[94]` | 填充到块的末尾。 |
+| `0x3FC` | `__le32` | `s_checksum` | 超级块校验和。 |
+
+`superblock_state`是以下值的组合：
+
+|   值  |  描述  |
+| ------ | ----- |
+|`0x0001`|干净卸载|
+|`0x0002`|检测到错误|
+|`0x0004`|正在恢复孤立文件|
+
+`superblock_errors`策略是以下值之一：
+
+| 值 | 描述 |
+|---|------|
+| 1 | 继续 |
+| 2 | 以只读方式重新挂载 |
+| 3 | 系统崩溃 |
+
+`filesystem_creator`是以下值之一：
+
+| 值 | 描述 |
+| -- | --- | 
+| 0 | Linux |
+| 1 | Hurd |
+| 2 | Masix |
+| 3 | FreeBSD |
+| 4 | Lites|
+
+`superblock_revision`是以下值之一：
+
+| 值 | 描述 | 
+| -- | --- |
+| 0 | 原始格式 | 
+| 1 | v2格式，具有动态inode大小|
+
+注意，`EXT4_DYNAMIC_REV` 指的是修订版本1或更新的文件系统。
+
+`super_compat`字段是以下任何值的组合：
+
+| 值 | 描述 |
+| -- | --- |
+| 0x1 | 目录预分配 (COMPAT_DIR_PREALLOC) |
+| 0x2 | "imagic inodes"。从代码中看不清楚这是做什么的 (COMPAT_IMAGIC_INODES) | 
+| 0x4 | 有日志 (COMPAT_HAS_JOURNAL) |
+| 0x8 | 支持扩展属性 (COMPAT_EXT_ATTR) |
+| 0x10 | 为文件系统扩展保留GDT块 (COMPAT_RESIZE_INODE)。需要RO_COMPAT_SPARSE_SUPER |
+| 0x20 | 有目录索引 (COMPAT_DIR_INDEX)0x40"懒惰BG"。不在Linux内核中，似乎是用于未初始化的块组？(COMPAT_LAZY_BG) |
+| 0x80 | "排除inode"。未使用 (COMPAT_EXCLUDE_INODE) |
+| 0x100 | "排除位图"。似乎用于指示存在与快照相关的排除位图？在内核或`e2fsprogs`中未定义 (COMPAT_EXCLUDE_BITMAP) |
+| 0x200 | 稀疏超级块，v2。如果设置了此标志，SB字段`s_backup_bgs`指向包含备份超级块的两个块组 (COMPAT_SPARSE_SUPER2) |
+| 0x400 | 支持快速提交。尽管快速提交块向后不兼容，但快速提交块并不总是出现在日志中。如果日志中存在快速提交块，则设置JBD2不兼容特性(JBD2_FEATURE_INCOMPAT_FAST_COMMIT)(COMPAT_FAST_COMMIT)。|
+| 0x1000 | 已分配孤儿文件。这是一种特殊文件，用于更有效地跟踪已取消链接但仍然打开的inode。当文件中可能有任何条目时，我们还会设置适当的rocompat特性(RO_COMPAT_ORPHAN_PRESENT)。 |
+
+`super_incompat`特性字段是以下任意组合：
+
+| 值 | 描述 |
+| --- | ---- | 
+| 0x1 | 压缩(INCOMPAT_COMPRESSION)。|
+| 0x2 | 目录条目记录文件类型。见下面的ext4_dir_entry_2(INCOMPAT_FILETYPE)。|
+| 0x4 | 文件系统需要恢复(INCOMPAT_RECOVER)。| 
+| 0x8 | 文件系统有单独的日志设备(INCOMPAT_JOURNAL_DEV)。|
+| 0x10 | 元块组。请参阅前面对此特性的讨论(INCOMPAT_META_BG)。| 
+| 0x40 | 此文件系统中的文件使用区段(INCOMPAT_EXTENTS)。|
+| 0x80 | 启用2^64块的文件系统大小(INCOMPAT_64BIT)。| 
+| 0x100 | 多重挂载保护(INCOMPAT_MMP)。| 
+| 0x200 | 灵活块组。请参阅前面对此特性的讨论(INCOMPAT_FLEX_BG)。|
+| 0x400 | inode可用于存储大型扩展属性值(INCOMPAT_EA_INODE)。|
+| 0x1000 | 目录条目中的数据(INCOMPAT_DIRDATA)。（未实现？）|
+| 0x2000 | 元数据校验和种子存储在超级块中。此特性使管理员能够在文件系统挂载时更改metadata_csum文件系统的UUID；没有它，校验和定义要求重写所有元数据块(INCOMPAT_CSUM_SEED)。|
+| 0x4000 | 大型目录>2GB或3级htree(INCOMPAT_LARGEDIR)。在此特性之前，目录不能大于4GiB，htree深度不能超过2级。如果启用此特性，目录可以大于4GiB，最大htree深度为3。|
+| 0x8000 | inode中的数据(INCOMPAT_INLINE_DATA)。|
+| 0x10000 | 文件系统上存在加密inode。(INCOMPAT_ENCRYPT)。|
+
+`super_rocompat`特性字段是以下任意组合：
+
+| 值 | 描述 |
+| --- | ---- | 
+| 0x1 | 稀疏超级块。请参阅前面对此特性的讨论(RO_COMPAT_SPARSE_SUPER)。|
+| 0x2 | 此文件系统已用于存储大于2GiB的文件(RO_COMPAT_LARGE_FILE)。|
+| 0x4 | 内核或e2fsprogs中未使用(RO_COMPAT_BTREE_DIR)。|
+| 0x8 | 此文件系统具有以逻辑块为单位（而非512字节扇区）表示大小的文件。这意味着一个非常大的文件！(RO_COMPAT_HUGE_FILE)
+| 0x10 | 组描述符有校验和。除了检测损坏外，这对于使用未初始化组的懒格式化也很有用(RO_COMPAT_GDT_CSUM)。|
+| 0x20 | 表示旧的ext3 32,000子目录限制不再适用(RO_COMPAT_DIR_NLINK)。如果目录的i_links_count超过64,999，将设置为1。|
+| 0x40 | 表示此文件系统上存在大型inode(RO_COMPAT_EXTRA_ISIZE)。|
+| 0x80 | 此文件系统有快照(RO_COMPAT_HAS_SNAPSHOT)。|
+| 0x100 | 配额(RO_COMPAT_QUOTA)。|
+| 0x200 | 此文件系统支持"bigalloc"，这意味着文件区段以块的集群为单位跟踪，而不是以块为单位(RO_COMPAT_BIGALLOC)。|
+| 0x400 | 此文件系统支持元数据校验和。(RO_COMPAT_METADATA_CSUM；暗示RO_COMPAT_GDT_CSUM，尽管不能设置GDT_CSUM) |
+| 0x800 | 文件系统支持副本。此功能既不在内核中也不在e2fsprogs中。(RO_COMPAT_REPLICA)0x1000只读文件系统镜像；内核不会以读写方式挂载此镜像，大多数工具将拒绝写入该镜像。(RO_COMPAT_READONLY) |
+| 0x2000 | 文件系统跟踪项目配额。(RO_COMPAT_PROJECT) |
+| 0x8000 | 文件系统上可能存在完整性校验inode。(RO_COMPAT_VERITY) |
+| 0x10000 | 表示孤儿文件可能有有效的孤儿条目，因此我们需要在挂载文件系统时清理它们(RO_COMPAT_ORPHAN_PRESENT)。|
+
+`s_def_hash_version`字段是以下之一：
+
+| 值 | 描述 |
+| -- | --- |
+| 0x0 | 传统。|
+| 0x1 | 半MD4。| 
+| 0x2 | Tea。|
+| 0x3 | 传统，无符号。|
+| 0x4 | 半MD4，无符号。| 
+| 0x5 | Tea，无符号。|
+
+`s_default_mount_opts`字段是以下任意组合：
+
+| 值 | 描述 |
+| -- | --- |
+| 0x0001 | 在（重新）挂载时打印调试信息。(EXT4_DEFM_DEBUG) |
+| 0x0002 | 新文件采用包含目录的gid（而不是当前进程的fsgid）。(EXT4_DEFM_BSDGROUPS) |
+| 0x0004 | 支持用户空间提供的扩展属性。(EXT4_DEFM_XATTR_USER) |
+| 0x0008 | 支持POSIX访问控制列表(ACL)。(EXT4_DEFM_ACL) |
+| 0x0010 | 不支持32位UID。(EXT4_DEFM_UID16)|
+| 0x0020 | 所有数据和元数据都提交到日志。(EXT4_DEFM_JMODE_DATA) |
+| 0x0040 | 在元数据提交到日志之前，所有数据都刷新到磁盘。(EXT4_DEFM_JMODE_ORDERED)|
+| 0x0060 | 不保留数据顺序；数据可能在元数据写入后才写入。(EXT4_DEFM_JMODE_WBACK) | 
+| 0x0100 | 禁用写入刷新。(EXT4_DEFM_NOBARRIER) |
+| 0x0200 | 跟踪文件系统中哪些块是元数据，因此不应用作数据块。此选项将在3.18上默认启用，希望如此。(EXT4_DEFM_BLOCK_VALIDITY) |
+| 0x0400 | 启用DISCARD支持，告知存储设备哪些块变得未使用。(EXT4_DEFM_DISCARD)|
+| 0x0800 | 禁用延迟分配。(EXT4_DEFM_NODELALLOC)|
+
+`s_flags`字段是以下任意组合：
+
+| 值 | 描述 |
+| -- | --- |
+| 0x0001 | 使用带符号的目录哈希。|
+| 0x0002 | 使用无符号的目录哈希。|
+| 0x0004 | 用于测试开发代码。|
+
+`s_encrypt_algos`列表可以包含以下任意一项：
+
+| 值 | 描述 |
+| -- | --- |
+| 0 | 无效算法(ENCRYPTION_MODE_INVALID)。|
+| 1 | XTS模式下的256位AES(ENCRYPTION_MODE_AES_256_XTS)。|
+| 2 | GCM模式下的256位AES(ENCRYPTION_MODE_AES_256_GCM)。|
+| 3 | CBC模式下的256位AES(ENCRYPTION_MODE_AES_256_CBC)。|
+
+超级块的总大小为1024字节。
+
+## 3.2. 块组描述符
+
+文件系统上的每个块组都有一个与之关联的描述符。如上面布局部分所述，组描述符（如果存在）是块组中的第二个项目。标准配置是每个块组包含完整的块组描述符表副本，除非设置了`sparse_super`特性标志。
+
+请注意组描述符如何记录位图和inode表的位置（即它们可以浮动）。这意味着在块组内，唯一具有固定位置的数据结构是超级块和组描述符表。`flex_bg`机制利用此属性将多个块组分组到一个flex组中，并在flex组的第一个组中将所有组的位图和inode表布置成一个长运行。
+
+如果设置了`meta_bg`特性标志，则多个块组将被分组到一个元组中。但是，请注意，在`meta_bg`情况下，较大元组内的第一个和最后两个块组仅包含元组内组的组描述符。
+
+`flex_bg`和`meta_bg`特性似乎并不互斥。
+
+在ext2、ext3和ext4（未启用64bit特性时），块组描述符仅为32字节长，因此在`bg_checksum`处结束。在启用了64bit特性的ext4文件系统上，块组描述符至少扩展到下面描述的64字节；大小存储在超级块中。
+
+如果设置了`gdt_csum`但未设置`metadata_csum`，则块组校验和是FS UUID、组号和组描述符结构的crc16。如果设置了`metadata_csum`，则块组校验和是FS UUID、组号和组描述符结构的校验和的低16位。块和inode位图校验和是针对FS UUID、组号和整个位图计算的。
+
+块组描述符按照`struct ext4_group_desc`布局。
+
+| 偏移量 | 类型 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+| 0x0 | __le32 | bg_block_bitmap_lo | 块位图位置的低32位。 |
+| 0x4 | __le32 | bg_inode_bitmap_lo | inode位图位置的低32位。|
+| 0x8 | __le32 | bg_inode_table_lo | inode表位置的低32位。|
+| 0xC | __le16| bg_free_blocks_count_lo | 空闲块计数的低16位。 |
+| 0xE | __le16 | bg_free_inodes_count_lo | 空闲inode计数的低16位。|
+| 0x10 | __le16 | bg_used_dirs_count_lo | 目录计数的低16位。 |
+| 0x12 | __le16 | bg_flags | 块组标志。参见下面的bgflags表。 |
+| 0x14 | __le32 | bg_exclude_bitmap_lo | 快照排除位图位置的低32位。|
+| 0x18 | __le16 | bg_block_bitmap_csum_lo | 块位图校验和的低16位。|
+| 0x1A | __le16 | bg_inode_bitmap_csum_lo | inode位图校验和的低16位。|
+| 0x1C | __le16 | bg_itable_unused_lo | 未使用inode计数的低16位。如果设置，我们无需扫描超过此组inode表中的(sb.s_inodes_per_group - gdt.bg_itable_unused)个条目。
+| 0x1E | __le16 | bg_checksum | 组描述符校验和；如果设置了RO_COMPAT_GDT_CSUM特性，则为crc16(sb_uuid+group_num+bg_desc)，或者如果设置了RO_COMPAT_METADATA_CSUM特性，则为crc32c(sb_uuid+group_num+bg_desc) & 0xFFFF。在计算crc16校验和时跳过bg_desc中的bg_checksum字段，如果使用crc32c校验和则设置为零。|
+| |  | | 以下字段仅在启用64bit特性且s_desc_size > 32时存在。|
+| 0x20 | __le32 | bg_block_bitmap_hi | 块位图位置的高32位。|
+| 0x24 | __le32 | bg_inode_bitmap_hi | inode位图位置的高32位。|
+| 0x28 | __le32 | bg_inode_table_hi  |inode表位置的高32位。| 
+| 0x2C | __le16 | bg_free_blocks_count_hi | 空闲块计数的高16位。|
+| 0x2E | __le16 | bg_free_inodes_count_hi | 空闲inode计数的高16位。|
+| 0x30 | __le16 | bg_used_dirs_count_hi | 目录计数的高16位。|
+| 0x32 | __le16 | bg_itable_unused_hi | 未使用inode计数的高16位。|
+| 0x34 | __le32 | bg_exclude_bitmap_hi | 快照排除位图位置的高32位。|
+| 0x38 | __le16 | bg_block_bitmap_csum_hi |块位图校验和的高16位。|
+| 0x3A | __le16 | bg_inode_bitmap_csum_hi | inode位图校验和的高16位。|
+| 0x3C | __u32 | bg_reserved | 填充至64字节。|
+
+块组标志可以是以下任意组合：
+
+| 值 | 描述 |
+| -- | --- |
+| 0x1 | inode表和位图未初始化(EXT4_BG_INODE_UNINIT)。|
+| 0x2 | 块位图未初始化(EXT4_BG_BLOCK_UNINIT)。|
+| 0x4 | inode表已置零(EXT4_BG_INODE_ZEROED)。|
+
+## 3.3. 块和inode位图
 
-仅当设置了EXT4_FEATURE_COMPAT_64BIT时，64位支持才有效。
+数据块位图跟踪块组内数据块的使用情况。
 
-| 0x150 | __le32 | s_blocks_count_hi | 块计数的高32位。 |
-| 0x154 | __le32 | s_r_blocks_count_hi | 保留块计数的高32位。 |
-| 0x158 | __le32 | s_free_blocks_count_hi | 空闲块计数的高32位。 |
-| 0x15C | __le16 | s_min_extra_isize | 所有inode至少有#字节。 |
-| 0x15E | __le16 | s_want_extra_isize | 新inode应保留#字节。 |
-| 0x160 | __le32 | s_flags | 杂项标志。更多信息请参见super_flags表。 |
-| 0x164 | __le16 | s_raid_stride | RAID步幅。这是在移动到下一个磁盘之前从磁盘读取或写入的逻辑块数。这会影响文件系统元数据的放置，希望使RAID存储更快。 |
-| 0x166 | __le16 | s_mmp_interval | 在多挂载防护(MMP)检查中等待的秒数。理论上，MMP是一种机制，用于在超级块中记录哪个主机和设备已挂载文件系统，以防止多次挂载。这个功能似乎没有实现... |
-| 0x168 | __le64 | s_mmp_block | 多挂载保护数据的块#。 |
-| 0x170 | __le32 | s_raid_stripe_width | RAID条带宽度。这是在返回到当前磁盘之前从磁盘读取或写入的逻辑块数。块分配器使用它来尝试减少RAID5/6中的读-修改-写操作数量。 |
-| 0x174 | __u8 | s_log_groups_per_flex | 灵活块组的大小为2 ^ s_log_groups_per_flex。 |
-| 0x175 | __u8 | s_checksum_type | 元数据校验和算法类型。唯一有效值为1 (crc32c)。 |
-| 0x176 | __le16 | s_reserved_pad |  |
-| 0x178 | __le64 | s_kbytes_written | 在其生命周期内写入此文件系统的KiB数。 |
-| 0x180 | __le32 | s_snapshot_inum | 活动快照的inode号。（在e2fsprogs/Linux中未使用。） |
-| 0x184 | __le32 | s_snapshot_id | 活动快照的顺序ID。（在e2fsprogs/Linux中未使用。） |
-| 0x188 | __le64 | s_snapshot_r_blocks_count | 为活动快照的未来使用保留的块数。（在e2fsprogs/Linux中未使用。） |
-| 0x190 | __le32 | s_snapshot_list | 磁盘上快照列表头的inode号。（在e2fsprogs/Linux中未使用。） |
-| 0x194 | __le32 | s_error_count | 看到的错误数。 |
-| 0x198 | __le32 | s_first_error_time | 第一次发生错误的时间，从纪元开始的秒数。 |
-| 0x19C | __le32 | s_first_error_ino | 第一次错误涉及的inode。 |
-| 0x1A0 | __le64 | s_first_error_block | 第一次错误涉及的块号。 |
-| 0x1A8 | __u8 | s_first_error_func[32] | 发生错误的函数名称。 |
-| 0x1C8 | __le32 | s_first_error_line | 发生错误的行号。 |
-| 0x1CC | __le32 | s_last_error_time | 最近一次错误的时间，从纪元开始的秒数。 |
-| 0x1D0 | __le32 | s_last_error_ino | 最近一次错误涉及的inode。 |
-| 0x1D4 | __le32 | s_last_error_line | 最近一次错误发生的行号。 |
-| 0x1D8 | __le64 | s_last_error_block | 最近一次错误涉及的块号。 |
-| 0x1E0 | __u8 | s_last_error_func[32] | 最近一次错误发生的函数名称。 |
-| 0x200 | __u8 | s_mount_opts[64] | 挂载选项的ASCIIZ字符串。 |
-| 0x240 | __le32 | s_usr_quota_inum | 用户配额文件的Inode号。 |
-| 0x244 | __le32 | s_grp_quota_inum | 组配额文件的Inode号。 |
-| 0x248 | __le32 | s_overhead_blocks | 文件系统中的开销块/集群。（这个字段总是零，这意味着内核动态计算它。） |
-| 0x24C | __le32 | s_backup_bgs[2] | 包含超级块备份的块组（如果sparse_super2） |
-| 0x254 | __u8 | s_encrypt_algos[4] | 使用中的加密算法。任何时候最多可以使用四种算法；有效的算法代码在下面的super_encrypt表中给出。 |
-| 0x258 | __u8 | s_encrypt_pw_salt[16] | 用于加密的string2key算法的盐。 |
-| 0x268 | __le32 | s_lpf_ino | lost+found的inode号 |
-| 0x26C | __le32 | s_prj_quota_inum | 跟踪项目配额的inode。 |
-| 0x270 | __le32 | s_checksum_seed | 用于metadata_csum计算的校验和种子。此值为crc32c(~0, $orig_fs_uuid)。 |
-| 0x274 | __u8 | s_wtime_hi | s_wtime字段的高8位。 |
-| 0x275 | __u8 | s_mtime_hi | s_mtime字段的高8位。 |
-| 0x276 | __u8 | s_mkfs_time_hi | s_mkfs_time字段的高8位。 |
-| 0x277 | __u8 | s_lastcheck_hi | s_lastcheck字段的高8位。 |
-| 0x278 | __u8 | s_first_error_time_hi | s_first_error_time字段的高8位。 |
-| 0x279 | __u8 | s_last_error_time_hi | s_last_error_time字段的高8位。 |
-| 0x27A | __u8 | s_pad[2] | 零填充。 |
-| 0x27C | __le16 | s_encoding | 文件名字符集编码。 |
-| 0x27E | __le16 | s_encoding_flags | 文件名字符集编码标志。 |
-| 0x280 | __le32 | s_orphan_file_inum | 孤立文件inode号。 |
-| 0x284 | __le32 | s_reserved[94] | 填充到块的末尾。 |
-| 0x3FC | __le32 | s_checksum | 超级块校验和。 |
+inode位图记录inode表中哪些条目正在使用。
 
-0x54
-
-__le32
-
-s_first_ino
-
-First non-reserved inode.
-
-0x58
-
-__le16
-
-s_inode_size
-
-Size of inode structure, in bytes.
-
-0x5A
-
-__le16
-
-s_block_group_nr
-
-Block group # of this superblock.
-
-0x5C
-
-__le32
-
-s_feature_compat
-
-Compatible feature set flags. Kernel can still read/write this fs even if it doesn’t understand a flag; fsck should not do that. See the super_compat table for more info.
-
-0x60
-
-__le32
-
-s_feature_incompat
-
-Incompatible feature set. If the kernel or fsck doesn’t understand one of these bits, it should stop. See the super_incompat table for more info.
-
-0x64
-
-__le32
-
-s_feature_ro_compat
-
-Readonly-compatible feature set. If the kernel doesn’t understand one of these bits, it can still mount read-only. See the super_rocompat table for more info.
-
-0x68
-
-__u8
-
-s_uuid[16]
-
-128-bit UUID for volume.
-
-0x78
-
-char
-
-s_volume_name[16]
-
-Volume label.
-
-0x88
-
-char
-
-s_last_mounted[64]
-
-Directory where filesystem was last mounted.
-
-0xC8
-
-__le32
-
-s_algorithm_usage_bitmap
-
-For compression (Not used in e2fsprogs/Linux)
-
-Performance hints. Directory preallocation should only happen if the EXT4_FEATURE_COMPAT_DIR_PREALLOC flag is on.
-
-0xCC
-
-__u8
-
-s_prealloc_blocks
-
-#. of blocks to try to preallocate for ... files? (Not used in e2fsprogs/Linux)
-
-0xCD
-
-__u8
-
-s_prealloc_dir_blocks
-
-#. of blocks to preallocate for directories. (Not used in e2fsprogs/Linux)
-
-0xCE
-
-__le16
-
-s_reserved_gdt_blocks
-
-Number of reserved GDT entries for future filesystem expansion.
-
-Journalling support is valid only if EXT4_FEATURE_COMPAT_HAS_JOURNAL is set.
-
-0xD0
-
-__u8
-
-s_journal_uuid[16]
-
-UUID of journal superblock
-
-0xE0
-
-__le32
-
-s_journal_inum
-
-inode number of journal file.
-
-0xE4
-
-__le32
-
-s_journal_dev
-
-Device number of journal file, if the external journal feature flag is set.
-
-0xE8
-
-__le32
-
-s_last_orphan
-
-Start of list of orphaned inodes to delete.
-
-0xEC
-
-__le32
-
-s_hash_seed[4]
-
-HTREE hash seed.
-
-0xFC
-
-__u8
-
-s_def_hash_version
-
-Default hash algorithm to use for directory hashes. See super_def_hash for more info.
-
-0xFD
-
-__u8
-
-s_jnl_backup_type
-
-If this value is 0 or EXT3_JNL_BACKUP_BLOCKS (1), then the s_jnl_blocks field contains a duplicate copy of the inode’s i_block[] array and i_size.
-
-0xFE
-
-__le16
-
-s_desc_size
-
-Size of group descriptors, in bytes, if the 64bit incompat feature flag is set.
-
-0x100
-
-__le32
-
-s_default_mount_opts
-
-Default mount options. See the super_mountopts table for more info.
-
-0x104
-
-__le32
-
-s_first_meta_bg
-
-First metablock block group, if the meta_bg feature is enabled.
-
-0x108
-
-__le32
-
-s_mkfs_time
-
-When the filesystem was created, in seconds since the epoch.
-
-0x10C
-
-__le32
-
-s_jnl_blocks[17]
-
-Backup copy of the journal inode’s i_block[] array in the first 15 elements and i_size_high and i_size in the 16th and 17th elements, respectively.
-
-64bit support is valid only if EXT4_FEATURE_COMPAT_64BIT is set.
-
-0x150
-
-__le32
-
-s_blocks_count_hi
-
-High 32-bits of the block count.
-
-0x154
-
-__le32
-
-s_r_blocks_count_hi
-
-High 32-bits of the reserved block count.
-
-0x158
-
-__le32
-
-s_free_blocks_count_hi
-
-High 32-bits of the free block count.
-
-0x15C
-
-__le16
-
-s_min_extra_isize
-
-All inodes have at least # bytes.
-
-0x15E
-
-__le16
-
-s_want_extra_isize
-
-New inodes should reserve # bytes.
-
-0x160
-
-__le32
-
-s_flags
-
-Miscellaneous flags. See the super_flags table for more info.
-
-0x164
-
-__le16
-
-s_raid_stride
-
-RAID stride. This is the number of logical blocks read from or written to the disk before moving to the next disk. This affects the placement of filesystem metadata, which will hopefully make RAID storage faster.
-
-0x166
-
-__le16
-
-s_mmp_interval
-
-#. seconds to wait in multi-mount prevention (MMP) checking. In theory, MMP is a mechanism to record in the superblock which host and device have mounted the filesystem, in order to prevent multiple mounts. This feature does not seem to be implemented...
-
-0x168
-
-__le64
-
-s_mmp_block
-
-Block # for multi-mount protection data.
-
-0x170
-
-__le32
-
-s_raid_stripe_width
-
-RAID stripe width. This is the number of logical blocks read from or written to the disk before coming back to the current disk. This is used by the block allocator to try to reduce the number of read-modify-write operations in a RAID5/6.
-
-0x174
-
-__u8
-
-s_log_groups_per_flex
-
-Size of a flexible block group is 2 ^ s_log_groups_per_flex.
-
-0x175
-
-__u8
-
-s_checksum_type
-
-Metadata checksum algorithm type. The only valid value is 1 (crc32c).
-
-0x176
-
-__le16
-
-s_reserved_pad
-
-0x178
-
-__le64
-
-s_kbytes_written
-
-Number of KiB written to this filesystem over its lifetime.
-
-0x180
-
-__le32
-
-s_snapshot_inum
-
-inode number of active snapshot. (Not used in e2fsprogs/Linux.)
-
-0x184
-
-__le32
-
-s_snapshot_id
-
-Sequential ID of active snapshot. (Not used in e2fsprogs/Linux.)
-
-0x188
-
-__le64
-
-s_snapshot_r_blocks_count
-
-Number of blocks reserved for active snapshot’s future use. (Not used in e2fsprogs/Linux.)
-
-0x190
-
-__le32
-
-s_snapshot_list
-
-inode number of the head of the on-disk snapshot list. (Not used in e2fsprogs/Linux.)
-
-0x194
-
-__le32
-
-s_error_count
-
-Number of errors seen.
-
-0x198
-
-__le32
-
-s_first_error_time
-
-First time an error happened, in seconds since the epoch.
-
-0x19C
-
-__le32
-
-s_first_error_ino
-
-inode involved in first error.
-
-0x1A0
-
-__le64
-
-s_first_error_block
-
-Number of block involved of first error.
-
-0x1A8
-
-__u8
-
-s_first_error_func[32]
-
-Name of function where the error happened.
-
-0x1C8
-
-__le32
-
-s_first_error_line
-
-Line number where error happened.
-
-0x1CC
-
-__le32
-
-s_last_error_time
-
-Time of most recent error, in seconds since the epoch.
-
-0x1D0
-
-__le32
-
-s_last_error_ino
-
-inode involved in most recent error.
-
-0x1D4
-
-__le32
-
-s_last_error_line
-
-Line number where most recent error happened.
-
-0x1D8
-
-__le64
-
-s_last_error_block
-
-Number of block involved in most recent error.
-
-0x1E0
-
-__u8
-
-s_last_error_func[32]
-
-Name of function where the most recent error happened.
-
-0x200
-
-__u8
-
-s_mount_opts[64]
-
-ASCIIZ string of mount options.
-
-0x240
-
-__le32
-
-s_usr_quota_inum
-
-Inode number of user quota file.
-
-0x244
-
-__le32
-
-s_grp_quota_inum
-
-Inode number of group quota file.
-
-0x248
-
-__le32
-
-s_overhead_blocks
-
-Overhead blocks/clusters in fs. (Huh? This field is always zero, which means that the kernel calculates it dynamically.)
-
-0x24C
-
-__le32
-
-s_backup_bgs[2]
-
-Block groups containing superblock backups (if sparse_super2)
-
-0x254
-
-__u8
-
-s_encrypt_algos[4]
-
-Encryption algorithms in use. There can be up to four algorithms in use at any time; valid algorithm codes are given in the super_encrypt table below.
-
-0x258
-
-__u8
-
-s_encrypt_pw_salt[16]
-
-Salt for the string2key algorithm for encryption.
-
-0x268
-
-__le32
-
-s_lpf_ino
-
-Inode number of lost+found
-
-0x26C
-
-__le32
-
-s_prj_quota_inum
-
-Inode that tracks project quotas.
-
-0x270
-
-__le32
-
-s_checksum_seed
-
-Checksum seed used for metadata_csum calculations. This value is crc32c(~0, $orig_fs_uuid).
-
-0x274
-
-__u8
-
-s_wtime_hi
-
-Upper 8 bits of the s_wtime field.
-
-0x275
-
-__u8
-
-s_mtime_hi
-
-Upper 8 bits of the s_mtime field.
-
-0x276
-
-__u8
-
-s_mkfs_time_hi
-
-Upper 8 bits of the s_mkfs_time field.
-
-0x277
-
-__u8
-
-s_lastcheck_hi
-
-Upper 8 bits of the s_lastcheck field.
-
-0x278
-
-__u8
-
-s_first_error_time_hi
-
-Upper 8 bits of the s_first_error_time field.
-
-0x279
-
-__u8
-
-s_last_error_time_hi
-
-Upper 8 bits of the s_last_error_time field.
-
-0x27A
-
-__u8
-
-s_pad[2]
-
-Zero padding.
-
-0x27C
-
-__le16
-
-s_encoding
-
-Filename charset encoding.
-
-0x27E
-
-__le16
-
-s_encoding_flags
-
-Filename charset encoding flags.
-
-0x280
-
-__le32
-
-s_orphan_file_inum
-
-Orphan file inode number.
-
-0x284
-
-__le32
-
-s_reserved[94]
-
-Padding to the end of the block.
-
-0x3FC
-
-__le32
-
-s_checksum
-
-Superblock checksum.
-
-The superblock state is some combination of the following:
-
-Value
-
-Description
-
-0x0001
-
-Cleanly umounted
-
-0x0002
-
-Errors detected
-
-0x0004
-
-Orphans being recovered
-
-The superblock error policy is one of the following:
-
-Value
-
-Description
-
-1
-
-Continue
-
-2
-
-Remount read-only
-
-3
-
-Panic
-
-The filesystem creator is one of the following:
-
-Value
-
-Description
-
-0
-
-Linux
-
-1
-
-Hurd
-
-2
-
-Masix
-
-3
-
-FreeBSD
-
-4
-
-Lites
-
-The superblock revision is one of the following:
-
-Value
-
-Description
-
-0
-
-Original format
-
-1
-
-v2 format w/ dynamic inode sizes
-
-Note that EXT4_DYNAMIC_REV refers to a revision 1 or newer filesystem.
-
-The superblock compatible features field is a combination of any of the following:
-
-Value
-
-Description
-
-0x1
-
-Directory preallocation (COMPAT_DIR_PREALLOC).
-
-0x2
-
-“imagic inodes”. Not clear from the code what this does (COMPAT_IMAGIC_INODES).
-
-0x4
-
-Has a journal (COMPAT_HAS_JOURNAL).
-
-0x8
-
-Supports extended attributes (COMPAT_EXT_ATTR).
-
-0x10
-
-Has reserved GDT blocks for filesystem expansion (COMPAT_RESIZE_INODE). Requires RO_COMPAT_SPARSE_SUPER.
-
-0x20
-
-Has directory indices (COMPAT_DIR_INDEX).
-
-0x40
-
-“Lazy BG”. Not in Linux kernel, seems to have been for uninitialized block groups? (COMPAT_LAZY_BG)
-
-0x80
-
-“Exclude inode”. Not used. (COMPAT_EXCLUDE_INODE).
-
-0x100
-
-“Exclude bitmap”. Seems to be used to indicate the presence of snapshot-related exclude bitmaps? Not defined in kernel or used in e2fsprogs (COMPAT_EXCLUDE_BITMAP).
-
-0x200
-
-Sparse Super Block, v2. If this flag is set, the SB field s_backup_bgs points to the two block groups that contain backup superblocks (COMPAT_SPARSE_SUPER2).
-
-0x400
-
-Fast commits supported. Although fast commits blocks are backward incompatible, fast commit blocks are not always present in the journal. If fast commit blocks are present in the journal, JBD2 incompat feature (JBD2_FEATURE_INCOMPAT_FAST_COMMIT) gets set (COMPAT_FAST_COMMIT).
-
-0x1000
-
-Orphan file allocated. This is the special file for more efficient tracking of unlinked but still open inodes. When there may be any entries in the file, we additionally set proper rocompat feature (RO_COMPAT_ORPHAN_PRESENT).
-
-The superblock incompatible features field is a combination of any of the following:
-
-Value
-
-Description
-
-0x1
-
-Compression (INCOMPAT_COMPRESSION).
-
-0x2
-
-Directory entries record the file type. See ext4_dir_entry_2 below (INCOMPAT_FILETYPE).
-
-0x4
-
-Filesystem needs recovery (INCOMPAT_RECOVER).
-
-0x8
-
-Filesystem has a separate journal device (INCOMPAT_JOURNAL_DEV).
-
-0x10
-
-Meta block groups. See the earlier discussion of this feature (INCOMPAT_META_BG).
-
-0x40
-
-Files in this filesystem use extents (INCOMPAT_EXTENTS).
-
-0x80
-
-Enable a filesystem size of 2^64 blocks (INCOMPAT_64BIT).
-
-0x100
-
-Multiple mount protection (INCOMPAT_MMP).
-
-0x200
-
-Flexible block groups. See the earlier discussion of this feature (INCOMPAT_FLEX_BG).
-
-0x400
-
-Inodes can be used to store large extended attribute values (INCOMPAT_EA_INODE).
-
-0x1000
-
-Data in directory entry (INCOMPAT_DIRDATA). (Not implemented?)
-
-0x2000
-
-Metadata checksum seed is stored in the superblock. This feature enables the administrator to change the UUID of a metadata_csum filesystem while the filesystem is mounted; without it, the checksum definition requires all metadata blocks to be rewritten (INCOMPAT_CSUM_SEED).
-
-0x4000
-
-Large directory >2GB or 3-level htree (INCOMPAT_LARGEDIR). Prior to this feature, directories could not be larger than 4GiB and could not have an htree more than 2 levels deep. If this feature is enabled, directories can be larger than 4GiB and have a maximum htree depth of 3.
-
-0x8000
-
-Data in inode (INCOMPAT_INLINE_DATA).
-
-0x10000
-
-Encrypted inodes are present on the filesystem. (INCOMPAT_ENCRYPT).
-
-The superblock read-only compatible features field is a combination of any of the following:
-
-Value
-
-Description
-
-0x1
-
-Sparse superblocks. See the earlier discussion of this feature (RO_COMPAT_SPARSE_SUPER).
-
-0x2
-
-This filesystem has been used to store a file greater than 2GiB (RO_COMPAT_LARGE_FILE).
-
-0x4
-
-Not used in kernel or e2fsprogs (RO_COMPAT_BTREE_DIR).
-
-0x8
-
-This filesystem has files whose sizes are represented in units of logical blocks, not 512-byte sectors. This implies a very large file indeed! (RO_COMPAT_HUGE_FILE)
-
-0x10
-
-Group descriptors have checksums. In addition to detecting corruption, this is useful for lazy formatting with uninitialized groups (RO_COMPAT_GDT_CSUM).
-
-0x20
-
-Indicates that the old ext3 32,000 subdirectory limit no longer applies (RO_COMPAT_DIR_NLINK). A directory’s i_links_count will be set to 1 if it is incremented past 64,999.
-
-0x40
-
-Indicates that large inodes exist on this filesystem (RO_COMPAT_EXTRA_ISIZE).
-
-0x80
-
-This filesystem has a snapshot (RO_COMPAT_HAS_SNAPSHOT).
-
-0x100
-
-Quota (RO_COMPAT_QUOTA).
-
-0x200
-
-This filesystem supports “bigalloc”, which means that file extents are tracked in units of clusters (of blocks) instead of blocks (RO_COMPAT_BIGALLOC).
-
-0x400
-
-This filesystem supports metadata checksumming. (RO_COMPAT_METADATA_CSUM; implies RO_COMPAT_GDT_CSUM, though GDT_CSUM must not be set)
-
-0x800
-
-Filesystem supports replicas. This feature is neither in the kernel nor e2fsprogs. (RO_COMPAT_REPLICA)
-
-0x1000
-
-Read-only filesystem image; the kernel will not mount this image read-write and most tools will refuse to write to the image. (RO_COMPAT_READONLY)
-
-0x2000
-
-Filesystem tracks project quotas. (RO_COMPAT_PROJECT)
-
-0x8000
-
-Verity inodes may be present on the filesystem. (RO_COMPAT_VERITY)
-
-0x10000
-
-Indicates orphan file may have valid orphan entries and thus we need to clean them up when mounting the filesystem (RO_COMPAT_ORPHAN_PRESENT).
-
-The s_def_hash_version field is one of the following:
-
-Value
-
-Description
-
-0x0
-
-Legacy.
-
-0x1
-
-Half MD4.
-
-0x2
-
-Tea.
-
-0x3
-
-Legacy, unsigned.
-
-0x4
-
-Half MD4, unsigned.
-
-0x5
-
-Tea, unsigned.
-
-The s_default_mount_opts field is any combination of the following:
-
-Value
-
-Description
-
-0x0001
-
-Print debugging info upon (re)mount. (EXT4_DEFM_DEBUG)
-
-0x0002
-
-New files take the gid of the containing directory (instead of the fsgid of the current process). (EXT4_DEFM_BSDGROUPS)
-
-0x0004
-
-Support userspace-provided extended attributes. (EXT4_DEFM_XATTR_USER)
-
-0x0008
-
-Support POSIX access control lists (ACLs). (EXT4_DEFM_ACL)
-
-0x0010
-
-Do not support 32-bit UIDs. (EXT4_DEFM_UID16)
-
-0x0020
-
-All data and metadata are committed to the journal. (EXT4_DEFM_JMODE_DATA)
-
-0x0040
-
-All data are flushed to the disk before metadata are committed to the journal. (EXT4_DEFM_JMODE_ORDERED)
-
-0x0060
-
-Data ordering is not preserved; data may be written after the metadata has been written. (EXT4_DEFM_JMODE_WBACK)
-
-0x0100
-
-Disable write flushes. (EXT4_DEFM_NOBARRIER)
-
-0x0200
-
-Track which blocks in a filesystem are metadata and therefore should not be used as data blocks. This option will be enabled by default on 3.18, hopefully. (EXT4_DEFM_BLOCK_VALIDITY)
-
-0x0400
-
-Enable DISCARD support, where the storage device is told about blocks becoming unused. (EXT4_DEFM_DISCARD)
-
-0x0800
-
-Disable delayed allocation. (EXT4_DEFM_NODELALLOC)
-
-The s_flags field is any combination of the following:
-
-Value
-
-Description
-
-0x0001
-
-Signed directory hash in use.
-
-0x0002
-
-Unsigned directory hash in use.
-
-0x0004
-
-To test development code.
-
-The s_encrypt_algos list can contain any of the following:
-
-Value
-
-Description
-
-0
-
-Invalid algorithm (ENCRYPTION_MODE_INVALID).
-
-1
-
-256-bit AES in XTS mode (ENCRYPTION_MODE_AES_256_XTS).
-
-2
-
-256-bit AES in GCM mode (ENCRYPTION_MODE_AES_256_GCM).
-
-3
-
-256-bit AES in CBC mode (ENCRYPTION_MODE_AES_256_CBC).
-
-Total size of the superblock is 1024 bytes.
-
-3.2. Block Group Descriptors
-Each block group on the filesystem has one of these descriptors associated with it. As noted in the Layout section above, the group descriptors (if present) are the second item in the block group. The standard configuration is for each block group to contain a full copy of the block group descriptor table unless the sparse_super feature flag is set.
-
-Notice how the group descriptor records the location of both bitmaps and the inode table (i.e. they can float). This means that within a block group, the only data structures with fixed locations are the superblock and the group descriptor table. The flex_bg mechanism uses this property to group several block groups into a flex group and lay out all of the groups’ bitmaps and inode tables into one long run in the first group of the flex group.
-
-If the meta_bg feature flag is set, then several block groups are grouped together into a meta group. Note that in the meta_bg case, however, the first and last two block groups within the larger meta group contain only group descriptors for the groups inside the meta group.
-
-flex_bg and meta_bg do not appear to be mutually exclusive features.
-
-In ext2, ext3, and ext4 (when the 64bit feature is not enabled), the block group descriptor was only 32 bytes long and therefore ends at bg_checksum. On an ext4 filesystem with the 64bit feature enabled, the block group descriptor expands to at least the 64 bytes described below; the size is stored in the superblock.
-
-If gdt_csum is set and metadata_csum is not set, the block group checksum is the crc16 of the FS UUID, the group number, and the group descriptor structure. If metadata_csum is set, then the block group checksum is the lower 16 bits of the checksum of the FS UUID, the group number, and the group descriptor structure. Both block and inode bitmap checksums are calculated against the FS UUID, the group number, and the entire bitmap.
-
-The block group descriptor is laid out in struct ext4_group_desc.
-
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-bg_block_bitmap_lo
-
-Lower 32-bits of location of block bitmap.
-
-0x4
-
-__le32
-
-bg_inode_bitmap_lo
-
-Lower 32-bits of location of inode bitmap.
-
-0x8
-
-__le32
-
-bg_inode_table_lo
-
-Lower 32-bits of location of inode table.
-
-0xC
-
-__le16
-
-bg_free_blocks_count_lo
-
-Lower 16-bits of free block count.
-
-0xE
-
-__le16
-
-bg_free_inodes_count_lo
-
-Lower 16-bits of free inode count.
-
-0x10
-
-__le16
-
-bg_used_dirs_count_lo
-
-Lower 16-bits of directory count.
-
-0x12
-
-__le16
-
-bg_flags
-
-Block group flags. See the bgflags table below.
-
-0x14
-
-__le32
-
-bg_exclude_bitmap_lo
-
-Lower 32-bits of location of snapshot exclusion bitmap.
-
-0x18
-
-__le16
-
-bg_block_bitmap_csum_lo
-
-Lower 16-bits of the block bitmap checksum.
-
-0x1A
-
-__le16
-
-bg_inode_bitmap_csum_lo
-
-Lower 16-bits of the inode bitmap checksum.
-
-0x1C
-
-__le16
-
-bg_itable_unused_lo
-
-Lower 16-bits of unused inode count. If set, we needn’t scan past the (sb.s_inodes_per_group - gdt.bg_itable_unused) th entry in the inode table for this group.
-
-0x1E
-
-__le16
-
-bg_checksum
-
-Group descriptor checksum; crc16(sb_uuid+group_num+bg_desc) if the RO_COMPAT_GDT_CSUM feature is set, or crc32c(sb_uuid+group_num+bg_desc) & 0xFFFF if the RO_COMPAT_METADATA_CSUM feature is set. The bg_checksum field in bg_desc is skipped when calculating crc16 checksum, and set to zero if crc32c checksum is used.
-
-These fields only exist if the 64bit feature is enabled and s_desc_size > 32.
-
-0x20
-
-__le32
-
-bg_block_bitmap_hi
-
-Upper 32-bits of location of block bitmap.
-
-0x24
-
-__le32
-
-bg_inode_bitmap_hi
-
-Upper 32-bits of location of inodes bitmap.
-
-0x28
-
-__le32
-
-bg_inode_table_hi
-
-Upper 32-bits of location of inodes table.
-
-0x2C
-
-__le16
-
-bg_free_blocks_count_hi
-
-Upper 16-bits of free block count.
-
-0x2E
-
-__le16
-
-bg_free_inodes_count_hi
-
-Upper 16-bits of free inode count.
-
-0x30
-
-__le16
-
-bg_used_dirs_count_hi
-
-Upper 16-bits of directory count.
-
-0x32
-
-__le16
-
-bg_itable_unused_hi
-
-Upper 16-bits of unused inode count.
-
-0x34
-
-__le32
-
-bg_exclude_bitmap_hi
-
-Upper 32-bits of location of snapshot exclusion bitmap.
-
-0x38
-
-__le16
-
-bg_block_bitmap_csum_hi
-
-Upper 16-bits of the block bitmap checksum.
-
-0x3A
-
-__le16
-
-bg_inode_bitmap_csum_hi
-
-Upper 16-bits of the inode bitmap checksum.
-
-0x3C
-
-__u32
-
-bg_reserved
-
-Padding to 64 bytes.
-
-Block group flags can be any combination of the following:
-
-Value
-
-Description
-
-0x1
-
-inode table and bitmap are not initialized (EXT4_BG_INODE_UNINIT).
-
-0x2
-
-block bitmap is not initialized (EXT4_BG_BLOCK_UNINIT).
-
-0x4
-
-inode table is zeroed (EXT4_BG_INODE_ZEROED).
-
-3.3. Block and inode Bitmaps
-The data block bitmap tracks the usage of data blocks within the block group.
-
-The inode bitmap records which entries in the inode table are in use.
-
-As with most bitmaps, one bit represents the usage status of one data block or inode table entry. This implies a block group size of 8 * number_of_bytes_in_a_logical_block.
-
-NOTE: If BLOCK_UNINIT is set for a given block group, various parts of the kernel and e2fsprogs code pretends that the block bitmap contains zeros (i.e. all blocks in the group are free). However, it is not necessarily the case that no blocks are in use -- if meta_bg is set, the bitmaps and group descriptor live inside the group. Unfortunately, ext2fs_test_block_bitmap2() will return ‘0’ for those locations, which produces confusing debugfs output.
-
-3.4. Inode Table
-Inode tables are statically allocated at mkfs time. Each block group descriptor points to the start of the table, and the superblock records the number of inodes per group. See the section on inodes for more information.
-
-3.5. Multiple Mount Protection
-Multiple mount protection (MMP) is a feature that protects the filesystem against multiple hosts trying to use the filesystem simultaneously. When a filesystem is opened (for mounting, or fsck, etc.), the MMP code running on the node (call it node A) checks a sequence number. If the sequence number is EXT4_MMP_SEQ_CLEAN, the open continues. If the sequence number is EXT4_MMP_SEQ_FSCK, then fsck is (hopefully) running, and open fails immediately. Otherwise, the open code will wait for twice the specified MMP check interval and check the sequence number again. If the sequence number has changed, then the filesystem is active on another machine and the open fails. If the MMP code passes all of those checks, a new MMP sequence number is generated and written to the MMP block, and the mount proceeds.
-
-While the filesystem is live, the kernel sets up a timer to re-check the MMP block at the specified MMP check interval. To perform the re-check, the MMP sequence number is re-read; if it does not match the in-memory MMP sequence number, then another node (node B) has mounted the filesystem, and node A remounts the filesystem read-only. If the sequence numbers match, the sequence number is incremented both in memory and on disk, and the re-check is complete.
-
-The hostname and device filename are written into the MMP block whenever an open operation succeeds. The MMP code does not use these values; they are provided purely for informational purposes.
-
-The checksum is calculated against the FS UUID and the MMP structure. The MMP structure (struct mmp_struct) is as follows:
-
-Offset
-
-Type
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-mmp_magic
-
-Magic number for MMP, 0x004D4D50 (“MMP”).
-
-0x4
-
-__le32
-
-mmp_seq
-
-Sequence number, updated periodically.
-
-0x8
-
-__le64
-
-mmp_time
-
-Time that the MMP block was last updated.
-
-0x10
-
-char[64]
-
-mmp_nodename
-
-Hostname of the node that opened the filesystem.
-
-0x50
-
-char[32]
-
-mmp_bdevname
-
-Block device name of the filesystem.
-
-0x70
-
-__le16
-
-mmp_check_interval
-
-The MMP re-check interval, in seconds.
-
-0x72
-
-__le16
-
-mmp_pad1
-
-Zero.
-
-0x74
-
-__le32[226]
-
-mmp_pad2
-
-Zero.
-
-0x3FC
-
-__le32
-
-mmp_checksum
-
-Checksum of the MMP block.
-
-3.6. Journal (jbd2)
-Introduced in ext3, the ext4 filesystem employs a journal to protect the filesystem against metadata inconsistencies in the case of a system crash. Up to 10,240,000 file system blocks (see man mke2fs(8) for more details on journal size limits) can be reserved inside the filesystem as a place to land “important” data writes on-disk as quickly as possible. Once the important data transaction is fully written to the disk and flushed from the disk write cache, a record of the data being committed is also written to the journal. At some later point in time, the journal code writes the transactions to their final locations on disk (this could involve a lot of seeking or a lot of small read-write-erases) before erasing the commit record. Should the system crash during the second slow write, the journal can be replayed all the way to the latest commit record, guaranteeing the atomicity of whatever gets written through the journal to the disk. The effect of this is to guarantee that the filesystem does not become stuck midway through a metadata update.
-
-For performance reasons, ext4 by default only writes filesystem metadata through the journal. This means that file data blocks are /not/ guaranteed to be in any consistent state after a crash. If this default guarantee level (data=ordered) is not satisfactory, there is a mount option to control journal behavior. If data=journal, all data and metadata are written to disk through the journal. This is slower but safest. If data=writeback, dirty data blocks are not flushed to the disk before the metadata are written to disk through the journal.
-
-In case of data=ordered mode, Ext4 also supports fast commits which help reduce commit latency significantly. The default data=ordered mode works by logging metadata blocks to the journal. In fast commit mode, Ext4 only stores the minimal delta needed to recreate the affected metadata in fast commit space that is shared with JBD2. Once the fast commit area fills in or if fast commit is not possible or if JBD2 commit timer goes off, Ext4 performs a traditional full commit. A full commit invalidates all the fast commits that happened before it and thus it makes the fast commit area empty for further fast commits. This feature needs to be enabled at mkfs time.
-
-The journal inode is typically inode 8. The first 68 bytes of the journal inode are replicated in the ext4 superblock. The journal itself is normal (but hidden) file within the filesystem. The file usually consumes an entire block group, though mke2fs tries to put it in the middle of the disk.
-
-All fields in jbd2 are written to disk in big-endian order. This is the opposite of ext4.
-
-NOTE: Both ext4 and ocfs2 use jbd2.
-
-The maximum size of a journal embedded in an ext4 filesystem is 2^32 blocks. jbd2 itself does not seem to care.
-
-3.6.1. Layout
-Generally speaking, the journal has this format:
-
-Superblock
-
-descriptor_block (data_blocks or revocation_block) [more data or revocations] commmit_block
-
-[more transactions...]
-
-One transaction
-
-Notice that a transaction begins with either a descriptor and some data, or a block revocation list. A finished transaction always ends with a commit. If there is no commit record (or the checksums don’t match), the transaction will be discarded during replay.
-
-3.6.2. External Journal
-Optionally, an ext4 filesystem can be created with an external journal device (as opposed to an internal journal, which uses a reserved inode). In this case, on the filesystem device, s_journal_inum should be zero and s_journal_uuid should be set. On the journal device there will be an ext4 super block in the usual place, with a matching UUID. The journal superblock will be in the next full block after the superblock.
-
-1024 bytes of padding
-
-ext4 Superblock
-
-Journal Superblock
-
-descriptor_block (data_blocks or revocation_block) [more data or revocations] commmit_block
-
-[more transactions...]
-
-One transaction
-
-3.6.3. Block Header
-Every block in the journal starts with a common 12-byte header struct journal_header_s:
-
-Offset
-
-Type
-
-Name
-
-Description
-
-0x0
-
-__be32
-
-h_magic
-
-jbd2 magic number, 0xC03B3998.
-
-0x4
-
-__be32
-
-h_blocktype
-
-Description of what this block contains. See the jbd2_blocktype table below.
-
-0x8
-
-__be32
-
-h_sequence
-
-The transaction ID that goes with this block.
-
-The journal block type can be any one of:
-
-Value
-
-Description
-
-1
-
-Descriptor. This block precedes a series of data blocks that were written through the journal during a transaction.
-
-2
-
-Block commit record. This block signifies the completion of a transaction.
-
-3
-
-Journal superblock, v1.
-
-4
-
-Journal superblock, v2.
-
-5
-
-Block revocation records. This speeds up recovery by enabling the journal to skip writing blocks that were subsequently rewritten.
-
-3.6.4. Super Block
-The super block for the journal is much simpler as compared to ext4’s. The key data kept within are size of the journal, and where to find the start of the log of transactions.
-
-The journal superblock is recorded as struct journal_superblock_s, which is 1024 bytes long:
-
-Offset
-
-Type
-
-Name
-
-Description
-
-Static information describing the journal.
-
-0x0
-
-journal_header_t (12 bytes)
-
-s_header
-
-Common header identifying this as a superblock.
-
-0xC
-
-__be32
-
-s_blocksize
-
-Journal device block size.
-
-0x10
-
-__be32
-
-s_maxlen
-
-Total number of blocks in this journal.
-
-0x14
-
-__be32
-
-s_first
-
-First block of log information.
-
-Dynamic information describing the current state of the log.
-
-0x18
-
-__be32
-
-s_sequence
-
-First commit ID expected in log.
-
-0x1C
-
-__be32
-
-s_start
-
-Block number of the start of log. Contrary to the comments, this field being zero does not imply that the journal is clean!
-
-0x20
-
-__be32
-
-s_errno
-
-Error value, as set by jbd2_journal_abort().
-
-The remaining fields are only valid in a v2 superblock.
-
-0x24
-
-__be32
-
-s_feature_compat;
-
-Compatible feature set. See the table jbd2_compat below.
-
-0x28
-
-__be32
-
-s_feature_incompat
-
-Incompatible feature set. See the table jbd2_incompat below.
-
-0x2C
-
-__be32
-
-s_feature_ro_compat
-
-Read-only compatible feature set. There aren’t any of these currently.
-
-0x30
-
-__u8
-
-s_uuid[16]
-
-128-bit uuid for journal. This is compared against the copy in the ext4 super block at mount time.
-
-0x40
-
-__be32
-
-s_nr_users
-
-Number of file systems sharing this journal.
-
-0x44
-
-__be32
-
-s_dynsuper
-
-Location of dynamic super block copy. (Not used?)
-
-0x48
-
-__be32
-
-s_max_transaction
-
-Limit of journal blocks per transaction. (Not used?)
-
-0x4C
-
-__be32
-
-s_max_trans_data
-
-Limit of data blocks per transaction. (Not used?)
-
-0x50
-
-__u8
-
-s_checksum_type
-
-Checksum algorithm used for the journal. See jbd2_checksum_type for more info.
-
-0x51
-
-__u8[3]
-
-s_padding2
-
-0x54
-
-__be32
-
-s_num_fc_blocks
-
-Number of fast commit blocks in the journal.
-
-0x58
-
-__be32
-
-s_head
-
-Block number of the head (first unused block) of the journal, only up-to-date when the journal is empty.
-
-0x5C
-
-__u32
-
-s_padding[40]
-
-0xFC
-
-__be32
-
-s_checksum
-
-Checksum of the entire superblock, with this field set to zero.
-
-0x100
-
-__u8
-
-s_users[16*48]
-
-ids of all file systems sharing the log. e2fsprogs/Linux don’t allow shared external journals, but I imagine Lustre (or ocfs2?), which use the jbd2 code, might.
-
-The journal compat features are any combination of the following:
-
-Value
-
-Description
-
-0x1
-
-Journal maintains checksums on the data blocks. (JBD2_FEATURE_COMPAT_CHECKSUM)
-
-The journal incompat features are any combination of the following:
-
-Value
-
-Description
-
-0x1
-
-Journal has block revocation records. (JBD2_FEATURE_INCOMPAT_REVOKE)
-
-0x2
-
-Journal can deal with 64-bit block numbers. (JBD2_FEATURE_INCOMPAT_64BIT)
-
-0x4
-
-Journal commits asynchronously. (JBD2_FEATURE_INCOMPAT_ASYNC_COMMIT)
-
-0x8
-
-This journal uses v2 of the checksum on-disk format. Each journal metadata block gets its own checksum, and the block tags in the descriptor table contain checksums for each of the data blocks in the journal. (JBD2_FEATURE_INCOMPAT_CSUM_V2)
-
-0x10
-
-This journal uses v3 of the checksum on-disk format. This is the same as v2, but the journal block tag size is fixed regardless of the size of block numbers. (JBD2_FEATURE_INCOMPAT_CSUM_V3)
-
-0x20
-
-Journal has fast commit blocks. (JBD2_FEATURE_INCOMPAT_FAST_COMMIT)
-
-Journal checksum type codes are one of the following. crc32 or crc32c are the most likely choices.
-
-Value
-
-Description
-
-1
-
-CRC32
-
-2
-
-MD5
-
-3
-
-SHA1
-
-4
-
-CRC32C
-
-3.6.5. Descriptor Block
-The descriptor block contains an array of journal block tags that describe the final locations of the data blocks that follow in the journal. Descriptor blocks are open-coded instead of being completely described by a data structure, but here is the block structure anyway. Descriptor blocks consume at least 36 bytes, but use a full block:
-
-Offset
-
-Type
-
-Name
-
-Descriptor
-
-0x0
-
-journal_header_t
-
-(open coded)
-
-Common block header.
-
-0xC
-
-struct journal_block_tag_s
-
-open coded array[]
-
-Enough tags either to fill up the block or to describe all the data blocks that follow this descriptor block.
-
-Journal block tags have any of the following formats, depending on which journal feature and block tag flags are set.
-
-If JBD2_FEATURE_INCOMPAT_CSUM_V3 is set, the journal block tag is defined as struct journal_block_tag3_s, which looks like the following. The size is 16 or 32 bytes.
-
-Offset
-
-Type
-
-Name
-
-Descriptor
-
-0x0
-
-__be32
-
-t_blocknr
-
-Lower 32-bits of the location of where the corresponding data block should end up on disk.
-
-0x4
-
-__be32
-
-t_flags
-
-Flags that go with the descriptor. See the table jbd2_tag_flags for more info.
-
-0x8
-
-__be32
-
-t_blocknr_high
-
-Upper 32-bits of the location of where the corresponding data block should end up on disk. This is zero if JBD2_FEATURE_INCOMPAT_64BIT is not enabled.
-
-0xC
-
-__be32
-
-t_checksum
-
-Checksum of the journal UUID, the sequence number, and the data block.
-
-This field appears to be open coded. It always comes at the end of the tag, after t_checksum. This field is not present if the “same UUID” flag is set.
-
-0x8 or 0xC
-
-char
-
-uuid[16]
-
-A UUID to go with this tag. This field appears to be copied from the j_uuid field in struct journal_s, but only tune2fs touches that field.
-
-The journal tag flags are any combination of the following:
-
-Value
-
-Description
-
-0x1
-
-On-disk block is escaped. The first four bytes of the data block just happened to match the jbd2 magic number.
-
-0x2
-
-This block has the same UUID as previous, therefore the UUID field is omitted.
-
-0x4
-
-The data block was deleted by the transaction. (Not used?)
-
-0x8
-
-This is the last tag in this descriptor block.
-
-If JBD2_FEATURE_INCOMPAT_CSUM_V3 is NOT set, the journal block tag is defined as struct journal_block_tag_s, which looks like the following. The size is 8, 12, 24, or 28 bytes:
-
-Offset
-
-Type
-
-Name
-
-Descriptor
-
-0x0
-
-__be32
-
-t_blocknr
-
-Lower 32-bits of the location of where the corresponding data block should end up on disk.
-
-0x4
-
-__be16
-
-t_checksum
-
-Checksum of the journal UUID, the sequence number, and the data block. Note that only the lower 16 bits are stored.
-
-0x6
-
-__be16
-
-t_flags
-
-Flags that go with the descriptor. See the table jbd2_tag_flags for more info.
-
-This next field is only present if the super block indicates support for 64-bit block numbers.
-
-0x8
-
-__be32
-
-t_blocknr_high
-
-Upper 32-bits of the location of where the corresponding data block should end up on disk.
-
-This field appears to be open coded. It always comes at the end of the tag, after t_flags or t_blocknr_high. This field is not present if the “same UUID” flag is set.
-
-0x8 or 0xC
-
-char
-
-uuid[16]
-
-A UUID to go with this tag. This field appears to be copied from the j_uuid field in struct journal_s, but only tune2fs touches that field.
-
-If JBD2_FEATURE_INCOMPAT_CSUM_V2 or JBD2_FEATURE_INCOMPAT_CSUM_V3 are set, the end of the block is a struct jbd2_journal_block_tail, which looks like this:
-
-Offset
-
-Type
-
-Name
-
-Descriptor
-
-0x0
-
-__be32
-
-t_checksum
-
-Checksum of the journal UUID + the descriptor block, with this field set to zero.
-
-3.6.6. Data Block
-In general, the data blocks being written to disk through the journal are written verbatim into the journal file after the descriptor block. However, if the first four bytes of the block match the jbd2 magic number then those four bytes are replaced with zeroes and the “escaped” flag is set in the descriptor block tag.
-
-3.6.7. Revocation Block
-A revocation block is used to prevent replay of a block in an earlier transaction. This is used to mark blocks that were journalled at one time but are no longer journalled. Typically this happens if a metadata block is freed and re-allocated as a file data block; in this case, a journal replay after the file block was written to disk will cause corruption.
-
-NOTE: This mechanism is NOT used to express “this journal block is superseded by this other journal block”, as the author (djwong) mistakenly thought. Any block being added to a transaction will cause the removal of all existing revocation records for that block.
-
-Revocation blocks are described in struct jbd2_journal_revoke_header_s, are at least 16 bytes in length, but use a full block:
-
-Offset
-
-Type
-
-Name
-
-Description
-
-0x0
-
-journal_header_t
-
-r_header
-
-Common block header.
-
-0xC
-
-__be32
-
-r_count
-
-Number of bytes used in this block.
-
-0x10
-
-__be32 or __be64
-
-blocks[0]
-
-Blocks to revoke.
-
-After r_count is a linear array of block numbers that are effectively revoked by this transaction. The size of each block number is 8 bytes if the superblock advertises 64-bit block number support, or 4 bytes otherwise.
-
-If JBD2_FEATURE_INCOMPAT_CSUM_V2 or JBD2_FEATURE_INCOMPAT_CSUM_V3 are set, the end of the revocation block is a struct jbd2_journal_revoke_tail, which has this format:
-
-Offset
-
-Type
-
-Name
-
-Description
-
-0x0
-
-__be32
-
-r_checksum
-
-Checksum of the journal UUID + revocation block
-
-3.6.8. Commit Block
-The commit block is a sentry that indicates that a transaction has been completely written to the journal. Once this commit block reaches the journal, the data stored with this transaction can be written to their final locations on disk.
-
-The commit block is described by struct commit_header, which is 32 bytes long (but uses a full block):
+与大多数位图一样，一个位表示一个数据块或inode表条目的使用状态。这意味着块组大小为8 * 逻辑块中的字节数。
+
+注意：如果为给定块组设置了`BLOCK_UNINIT`，内核和e2fsprogs代码的各个部分会假装块位图包含零（即组中的所有块都是空闲的）。然而，不一定意味着没有块在使用——如果设置了`meta_bg`，位图和组描述符位于组内。不幸的是，`ext2fs_test_block_bitmap2()`将对这些位置返回'0'，这会产生令人困惑的debugfs输出。
+
+> BLOCK_UNINIT标志作用的时机是在文件系统的操作过程中，特别是以下几个场景:
+> 
+> 文件系统挂载时 - 当内核挂载文件系统并读取块组描述符时，如果发现某个块组设置了BLOCK_UNINIT标志，内核会假设该块组的所有块都是空闲的，而不会实际读取块位图的内容。
+>
+> 文件系统工具运行时 - 当e2fsprogs工具包中的程序(如e2fsck、debugfs等)处理文件系统时，它们会检查这个标志并相应地调整行为。
+>
+> 分配新块时 - 当文件系统需要分配新块时，如果检测到一个块组有BLOCK_UNINIT标志，它会首先初始化该块组的块位图，然后移除这个标志，表示该块组现在已被初始化。
+
+## 3.4. Inode表
+
+Inode表在mkfs时静态分配。每个块组描述符指向表的开始，超级块记录每组的inode数量。有关更多信息，请参阅inode部分。
+
+## 3.5. Multiple Mount Protection
+
+多重挂载保护(MMP)是一种功能，用于防止多个主机尝试同时使用文件系统。当打开文件系统（用于挂载或fsck等）时，节点（称为节点A）上运行的MMP代码检查序列号。如果序列号是`EXT4_MMP_SEQ_CLEAN`，则继续打开。如果序列号是`EXT4_MMP_SEQ_FSCK`，则说明fsck（希望）正在运行，打开立即失败。否则，打开代码将等待指定MMP检查间隔的两倍时间，然后再次检查序列号。如果序列号已更改，则文件系统在另一台机器上处于活动状态，打开失败。如果MMP代码通过了所有这些检查，将生成一个新的MMP序列号并写入MMP块，然后继续挂载。
+
+当文件系统处于活动状态时，内核设置一个定时器，以指定的MMP检查间隔重新检查MMP块。要执行重新检查，重新读取MMP序列号；如果它与内存中的MMP序列号不匹配，则另一个节点（节点B）已挂载文件系统，节点A将文件系统重新挂载为只读。如果序列号匹配，则序列号在内存和磁盘上都递增，重新检查完成。
+
+每当打开操作成功时，主机名和设备文件名都会写入MMP块。MMP代码不使用这些值；它们纯粹是为了提供信息。
+
+校验和是针对FS UUID和MMP结构计算的。MMP结构(struct mmp_struct)如下：
+
+| 偏移量 | 类型 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+| 0x0 | __le32 | mmp_magic | MMP的魔术数字，0x004D4D50（"MMP"）。
+| 0x4 | __le32 | mmp_seq | 序列号，定期更新。|
+| 0x8 | __le64 | mmp_time | MMP块最后更新的时间。|
+| 0x10 | char[64] | mmp_nodename | 打开文件系统的节点的主机名。|
+| 0x50 | char[32] | mmp_bdevname | 文件系统的块设备名称。 |
+| 0x70 | __le16 | mmp_check_interval | MMP重新检查间隔，以秒为单位。|
+| 0x72 | __le16 | mmp_pad1 | 零。|
+| 0x74 | __le32[226] | mmp_pad2 | 零。|
+| 0x3FC | __le32 | mmp_checksum | MMP块的校验和。|
+
+## 3.6. Journal (jbd2)
+
+在ext3中引入，`ext4`文件系统使用日志来在系统崩溃的情况下保护文件系统免受元数据不一致的影响。最多可以在文件系统内保留10,240,000个文件系统块（有关日志大小限制的更多详细信息，请参见`man mke2fs(8)`），作为尽快将"重要"数据写入磁盘的地方。一旦重要数据事务完全写入磁盘并从磁盘写入缓存中刷新，数据提交的记录也会写入日志。在稍后的某个时间点，日志代码将事务写入其在磁盘上的最终位置（这可能涉及大量寻道或大量小型读写擦除）然后才擦除提交记录。如果系统在第二次缓慢写入期间崩溃，可以重放日志直到最新的提交记录，保证无论通过日志写入磁盘的内容的原子性。这样做的效果是保证文件系统不会在元数据更新过程中卡住。
+
+出于性能原因，ext4默认只通过日志写入文件系统元数据。这意味着在崩溃后，文件数据块不能保证处于任何一致的状态。如果这种默认保证级别（`data=ordered`）不令人满意，有一个挂载选项可以控制日志行为。如果`data=journal`，所有数据和元数据都通过日志写入磁盘。这更慢但最安全。如果`data=writeback`，在元数据通过日志写入磁盘之前，不会将脏数据块刷新到磁盘。
+
+在`data=ordered`模式下，Ext4还支持快速提交，这有助于显著减少提交延迟。默认的`data=ordered`模式通过将元数据块记录到日志来工作。在快速提交模式下，Ext4只存储需要重新创建受影响元数据的最小增量，存储在与JBD2共享的快速提交空间中。一旦快速提交区域填满或者无法进行快速提交或者JBD2提交计时器超时，Ext4执行传统的完整提交。完整提交使其之前发生的所有快速提交无效，从而使快速提交区域为进一步的快速提交腾出空间。此功能需要在mkfs时启用。
+
+日志inode通常是inode 8。日志inode的前68个字节在ext4超级块中复制。日志本身是文件系统内的正常（但隐藏）文件。该文件通常消耗整个块组，尽管mke2fs尝试将其放在磁盘中间。
+
+jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
+
+注意：ext4和ocfs2都使用jbd2。
+
+嵌入在ext4文件系统中的日志的最大大小是2^32块。jbd2本身似乎并不关心。
+
+### 3.6.1. 布局
+
+一般来说，日志具有以下格式：
+
+| 超级块 | 描述符块 (数据块或撤销块) \[更多数据或撤销 \] 提交块 | \[更多事务...\] |
+| ----- | ----- | ----- |
+| | 一个事务 | |
+
+请注意，事务以描述符和一些数据开始，或者以块撤销列表开始。完成的事务总是以提交结束。如果没有提交记录（或校验和不匹配），事务将在重放期间被丢弃。
+
+### 3.6.2. 外部日志
+
+可选地，可以使用外部日志设备创建ext4文件系统（与使用保留inode的内部日志相对）。在这种情况下，在文件系统设备上，`s_journal_inum`应该为零，`s_journal_uuid`应该设置。在日志设备上，ext4超级块将位于通常的位置，具有匹配的UUID。日志超级块将位于超级块之后的下一个完整块中。
+
+| 1024字节的填充 | ext4超级块 | 日志超级块 | 描述符块 (数据块或撤销块) \[更多数据或撤销\] 提交块 | \[更多事务...\] | 
+| --- | --- | --- | --- | --- |
+| | | | 一个事务 | |
+
+### 3.6.3. 块头
+
+日志中的每个块都以一个共同的12字节头`struct journal_header_s`开始：
+
+| 偏移量 | 类型 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+| 0x0 | __be32 | h_magic | jbd2魔术数字，0xC03B3998。 |
+| 0x4 | __be32 | h_blocktype | 描述此块包含的内容。参见下面的`jbd2_blocktype`表。|
+| 0x8 | __be32 | h_sequence | 与此块关联的事务ID。|
+
+日志块类型可以是以下任意一种：
+
+| 值 | 描述 |
+| --- | ---- |
+| 1 | 描述符。此块位于一系列数据块之前，这些数据块在事务期间通过日志写入。|
+| 2 | 块提交记录。此块表示事务的完成。|
+| 3 | 日志超级块，v1。4日志超级块，v2。|
+| 5 | 块撤销记录。这通过使日志能够跳过写入随后被重写的块来加速恢复。|
+
+### 3.6.4. 超级块
+
+与ext4相比，日志的超级块要简单得多。其中保存的关键数据是日志的大小，以及在哪里可以找到事务日志的开始。
+
+日志超级块记录为`struct journal_superblock_s`，长度为1024字节：
+
+| 偏移量 | 类型 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+|  |  |  | 描述日志的静态信息。|
+| 0x0 | journal_header_t (12 bytes) | s_header | 标识这是超级块的通用头。|
+| 0xC | __be32 | s_blocksize | 日志设备块大小。| 0x10 | __be32 | s_maxlen | 此日志中的块总数。|
+| 0x14 | __be32 | s_first | 日志信息的第一个块。描述日志当前状态的动态信息。|
+| 0x18 | __be32 | s_sequence | 日志中预期的第一个提交ID。|
+| 0x1C | __be32 | s_start | 日志开始的块号。与注释相反，此字段为零并不意味着日志是干净的！|
+| 0x20 | __be32 | s_errno | 错误值，由jbd2_journal_abort()设置。以下字段仅在v2超级块中有效。|
+| 0x24 | __be32 | s_feature_compat | 兼容特性集。参见下面的jbd2_compat表。| 
+| 0x28 | __be32 | s_feature_incompat | 不兼容特性集。参见下面的jbd2_incompat表。|
+| 0x2C | __be32 | s_feature_ro_compat | 只读兼容特性集。目前没有任何这样的特性。|
+| 0x30 | __u8 | s_uuid[16] | 日志的128位uuid。在挂载时与ext4超级块中的副本进行比较。|
+| 0x40 | __be32 | s_nr_users | 共享此日志的文件系统数量。|
+| 0x44 | __be32 | s_dynsuper | 动态超级块副本的位置。（不使用？）|
+| 0x48 | __be32 | s_max_transaction | 每个事务的日志块限制。（不使用？）|
+| 0x4C | __be32 | s_max_trans_data | 每个事务的数据块限制。（不使用？）|
+| 0x50 | __u8s | _checksum_type  |用于日志的校验和算法。有关更多信息，请参见jbd2_checksum_type。|
+| 0x51 | __u8[3] | s_padding2 | 
+| 0x54 | __be32 | s_num_fc_blocks | 日志中的快速提交块数量。|
+| 0x58 | __be32 | s_head | 日志头（第一个未使用的块）的块号，仅在日志为空时更新。|
+| 0x5C | __u32 | s_padding[40] | | 
+| 0xFC | __be32 | s_checksum |整个超级块的校验和，此字段设置为零。|
+| 0x100 | __u8 | s_users[16*48] | 共享日志的所有文件系统的ID。e2fsprogs/Linux不允许共享外部日志，但我想Lustre（或ocfs2？）使用jbd2代码可能会。|
+
+日志兼容特性是以下任意组合：
+
+| 值 | 描述 |
+| --- | ---- |
+| 0x1 | 日志维护数据块的校验和。(JBD2_FEATURE_COMPAT_CHECKSUM)|
+
+日志不兼容特性是以下任意组合：
+
+| 值 | 描述 |
+| --- | --- |
+| 0x1 | 日志有块撤销记录。(JBD2_FEATURE_INCOMPAT_REVOKE)|
+| 0x2 | 日志可以处理64位块号。(JBD2_FEATURE_INCOMPAT_64BIT)|
+| 0x4 | 日志异步提交。(JBD2_FEATURE_INCOMPAT_ASYNC_COMMIT) |
+| 0x8 | 该日志使用校验和磁盘格式的v2版本。每个日志元数据块获得自己的校验和，描述符表中的块标签包含日志中每个数据块的校验和。(JBD2_FEATURE_INCOMPAT_CSUM_V2)|
+| 0x10 | 该日志使用校验和磁盘格式的v3版本。这与v2相同，但日志块标签大小是固定的，不管块号的大小如何。(JBD2_FEATURE_INCOMPAT_CSUM_V3)|
+| 0x20 | 日志有快速提交块。(JBD2_FEATURE_INCOMPAT_FAST_COMMIT)|
+
+日志校验和类型代码是以下之一。crc32或crc32c是最可能的选择。
+
+| 值 | 描述 |
+| -- | ---- |
+| 1 | CRC32 |
+| 2 | MD5 | 
+| 3 | SHA1 |
+| 4 | CRC32C|
+
+### 3.6.5. 描述符块
+
+描述符块包含一组日志块标签，描述了在日志中跟随的数据块的最终位置。描述符块是开放编码的，而不是由数据结构完全描述，但这里是块结构。描述符块至少消耗36字节，但使用完整的块：
+
+| 偏移量 | 类型 | 名称 | 描述符 |
+| ----- | ---- | ---- | ----- |
+| 0x0 | journal_header_t | (开放编码) | 通用块头。|
+| 0xC | struct journal_block_tag_s | 开放编码数组[] | 足够的标签，要么填满块，要么描述跟随此描述符块的所有数据块。|
+
+日志块标签有以下任何格式，取决于设置的日志特性和块标签标志。
+
+如果设置了`JBD2_FEATURE_INCOMPAT_CSUM_V3`，则日志块标签定义为`struct journal_block_tag3_s`，其外观如下。大小为16或32字节。
+
+| 偏移量 | 类型 | 名称 | 描述符 |
+| ----- | ---- | ---- | ----- |
+| 0x0 | __be32 | t_blocknr  |对应数据块应在磁盘上结束的位置的低32位。|
+| 0x4 | __be32 | t_flags  |与描述符一起的标志。有关更多信息，请参见jbd2_tag_flags表。|
+| 0x8 | __be32 | t_blocknr_high | 对应数据块应在磁盘上结束的位置的高32位。如果未启用JBD2_FEATURE_INCOMPAT_64BIT，则为零。|
+| 0xC | __be32 | t_checksum | 日志UUID、序列号和数据块的校验和。|
+|     |        |            |此字段似乎是开放编码的。它总是在t_checksum之后。如果设置了"same UUID"标志，则不存在此字段。|
+| 0x8或0xC | char | uuid[16]  |与此标签一起的UUID。此字段似乎是从struct journal_s中的j_uuid字段复制的，但只有tune2fs才触及该字段。
+
+日志标签标志是以下任意组合：
+
+| 值 | 描述 |
+| -- | --- |
+| 0x1 | 磁盘上的块是转义的。数据块的前四个字节恰好与jbd2魔术数字匹配。|
+| 0x2 | 该块与前一个具有相同的UUID，因此省略了UUID字段。|
+| 0x4 | 数据块被事务删除。(不使用？) |
+| 0x8 | 这是此描述符块中的最后一个标签。|
+
+如果未设置`JBD2_FEATURE_INCOMPAT_CSUM_V3`，则日志块标签定义为`struct journal_block_tag_s`，其外观如下。大小为8、12、24或28字节：
+
+| 偏移量 | 类型 | 名称 | 描述符 |
+| ----- | ---- | ---- | ----- |
+| 0x0 | __be32 | t_blocknr | 对应数据块应在磁盘上结束的位置的低32位。|
+| 0x4 | __be16 | t_checksum | 日志UUID、序列号和数据块的校验和。注意，只存储低16位。|
+| 0x6 | __be16 | t_flags | 与描述符一起的标志。参见jbd2_tag_flags表。| 
+| | | |以下字段仅在超级块表示支持64位块号时存在。|
+|0x8 | __be32 | t_blocknr_high | 对应数据块应在磁盘上结束的位置的高32位。|
+| | | | 此字段似乎是开放编码的。它总是在t_flags或t_blocknr_high之后。如果设置了"same UUID"标志，则不存在此字段。|
+| 0x8或0xC | char | uuid[16] | 与此标签一起的UUID。此字段似乎是从struct journal_s中的j_uuid字段复制的，但只有tune2fs才触及该字段。|
+
+如果设置了JBD2_FEATURE_INCOMPAT_CSUM_V2或JBD2_FEATURE_INCOMPAT_CSUM_V3，则块的末尾是`struct jbd2_journal_block_tail`，其样子如下：
+
+| 偏移量 | 类型 | 名称 | 描述符 |
+| ----- | ---- | ---- | ----- |
+| 0x0 | __be32 | t_checksum| 日志UUID+描述符块的校验和，此字段设置为零。|
+
+### 3.6.6. 数据块
+
+通常，通过日志写入磁盘的数据块在描述符块之后一字不差地写入日志文件。但是，如果块的前四个字节与jbd2魔术数字匹配，则这四个字节被替换为零，并在描述符块标签中设置"escaped"标志。
+
+### 3.6.7. Revocation Block
+
+撤销块用于防止在早期事务中重放块。这用于标记曾经记录在日志中但不再记录在日志中的块。通常，如果元数据块被释放并重新分配为文件数据块，就会发生这种情况；在这种情况下，如果在文件块写入磁盘后进行日志重放，将会导致损坏。
+
+注意：此机制不用于表达"此日志块被此其他日志块取代"，作者（djwong）错误地认为。添加到事务中的任何块都将导致该块的所有现有撤销记录被删除。
+
+撤销块在`struct jbd2_journal_revoke_header_s`中描述，至少为16字节长，但使用完整块：
+
+| 偏移量 | 类型 | 名称 | 描述 |
+| ----- | ---- | ---- | ----- |
+| 0x0 | journal_header_t | r_header | 通用块头。|
+| 0xC | __be32| r_count | 此块中使用的字节数。|
+| 0x10 | __be32或__be64 | blocks[0] | 要撤销的块。|
+
+在r_count之后是一个线性数组，包含由此事务有效撤销的块号。如果超级块公布64位块号支持，则每个块号的大小为8字节，否则为4字节。
+
+如果设置了JBD2_FEATURE_INCOMPAT_CSUM_V2或JBD2_FEATURE_INCOMPAT_CSUM_V3，则撤销块的末尾是struct jbd2_journal_revoke_tail，格式如下：
+
+| 偏移量 | 类型 | 名称 | 描述 |
+| ----- | ---- | ---- | ----- |
+| 0x0 | __be32 | r_checksum | 日志UUID+撤销块的校验和 |
+
+### 3.6.8. 提交块
+
+提交块是一个哨兵，表示事务已完全写入日志。一旦此提交块到达日志，存储在此事务中的数据就可以写入其在磁盘上的最终位置。
+
+提交块由struct commit_header描述，长度为32字节（但使用完整块）：
+
+|偏移量|类型|名称|描述符|
+| ----- | ---- | ---- | ----- |
+| 0x0 | journal_header_s(开放编码)通用块头。0xCunsigned charh_chksum_type用于验证事务中数据块完整性的校验和类型。参见jbd2_checksum_type了解更多信息。0xDunsigned charh_chksum_size校验和使用的字节数。很可能是4。0xEunsigned charh_padding[2]0x10__be32h_chksum[JBD2_CHECKSUM_BYTES]32字节的空间用于存储校验和。如果设置了JBD2_FEATURE_INCOMPAT_CSUM_V2或JBD2_FEATURE_INCOMPAT_CSUM_V3，则第一个__be32是日志UUID和整个提交块的校验和，此字段为零。如果设置了JBD2_FEATURE_COMPAT_CHECKSUM，则第一个__be32是已写入事务的所有块的crc32。0x30__be64h_commit_sec事务提交的时间，以纪元以来的秒数表示。0x38__be32h_commit_nsec上述时间戳的纳秒分量。
 
 Offset
 
@@ -2120,8 +607,9 @@ h_commit_nsec
 
 Nanoseconds component of the above timestamp.
 
-3.6.9. Fast commits
-Fast commit area is organized as a log of tag length values. Each TLV has a struct ext4_fc_tl in the beginning which stores the tag and the length of the entire field. It is followed by variable length tag specific value. Here is the list of supported tags and their meanings:
+### 3.6.9. 快速提交
+
+快速提交区域组织为标签长度值的日志。每个TLV的开头都有一个struct ext4_fc_tl，存储整个字段的标签和长度。它后面跟着特定于标签的可变长度值。以下是支持的标签及其含义的列表：
 
 Tag
 
@@ -2195,7 +683,8 @@ struct ext4_fc_tail
 
 Stores the TID of the commit, CRC of the fast commit of which this tag represents the end of
 
-3.6.10. Fast Commit Replay Idempotence
+### 3.6.10. Fast Commit Replay Idempotence
+
 Fast commits tags are idempotent in nature provided the recovery code follows certain rules. The guiding principle that the commit path follows while committing is that it stores the result of a particular operation instead of storing the procedure.
 
 Let’s consider this rename operation: ‘mv /a /b’. Let’s assume dirent ‘/a’ was associated with inode 10. During fast commit, instead of storing this operation as a procedure “rename a to b”, we store the resulting file system state as a “series” of outcomes:
@@ -2230,12 +719,14 @@ Inode 11
 
 If we crash after (3) we will have file A linked to inode 11. During the second replay, we will remove file A (inode 11). But we will create it back and make it point to inode 11. We won’t find B, so we’ll just skip that step. At this point, the refcount for inode 11 is not reliable, but that gets fixed by the replay of last inode 11 tag. Thus, by converting a non-idempotent procedure into a series of idempotent outcomes, fast commits ensured idempotence during the replay.
 
-3.6.11. Journal Checkpoint
+### 3.6.11. Journal Checkpoint
+
 Checkpointing the journal ensures all transactions and their associated buffers are submitted to the disk. In-progress transactions are waited upon and included in the checkpoint. Checkpointing is used internally during critical updates to the filesystem including journal recovery, filesystem resizing, and freeing of the journal_t structure.
 
 A journal checkpoint can be triggered from userspace via the ioctl EXT4_IOC_CHECKPOINT. This ioctl takes a single, u64 argument for flags. Currently, three flags are supported. First, EXT4_IOC_CHECKPOINT_FLAG_DRY_RUN can be used to verify input to the ioctl. It returns error if there is any invalid input, otherwise it returns success without performing any checkpointing. This can be used to check whether the ioctl exists on a system and to verify there are no issues with arguments or flags. The other two flags are EXT4_IOC_CHECKPOINT_FLAG_DISCARD and EXT4_IOC_CHECKPOINT_FLAG_ZEROOUT. These flags cause the journal blocks to be discarded or zero-filled, respectively, after the journal checkpoint is complete. EXT4_IOC_CHECKPOINT_FLAG_DISCARD and EXT4_IOC_CHECKPOINT_FLAG_ZEROOUT cannot both be set. The ioctl may be useful when snapshotting a system or for complying with content deletion SLOs.
 
-3.7. Orphan file
+## 3.7. Orphan file
+
 In unix there can inodes that are unlinked from directory hierarchy but that are still alive because they are open. In case of crash the filesystem has to clean up these inodes as otherwise they (and the blocks referenced from them) would leak. Similarly if we truncate or extend the file, we need not be able to perform the operation in a single journalling transaction. In such case we track the inode as orphan so that in case of crash extra blocks allocated to the file get truncated.
 
 Traditionally ext4 tracks orphan inodes in a form of single linked list where superblock contains the inode number of the last orphan inode (s_last_orphan field) and then each inode contains inode number of the previously orphaned inode (we overload i_dtime inode field for this). However this filesystem global single linked list is a scalability bottleneck for workloads that result in heavy creation of orphan inodes. When orphan file feature (COMPAT_ORPHAN_FILE) is enabled, the filesystem has a special inode (referenced from the superblock through s_orphan_file_inum) with several blocks. Each of these blocks has a structure:
