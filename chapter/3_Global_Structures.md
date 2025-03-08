@@ -513,11 +513,13 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 
 通常，通过日志写入磁盘的数据块在描述符块之后一字不差地写入日志文件。但是，如果块的前四个字节与jbd2魔术数字匹配，则这四个字节被替换为零，并在描述符块标签中设置"escaped"标志。
 
-### 3.6.7. Revocation Block
+### 3.6.7. 撤销块
 
-撤销块用于防止在早期事务中重放块。这用于标记曾经记录在日志中但不再记录在日志中的块。通常，如果元数据块被释放并重新分配为文件数据块，就会发生这种情况；在这种情况下，如果在文件块写入磁盘后进行日志重放，将会导致损坏。
+撤销块用于防止在重放块早期事务中。这用于标记曾经记录在日志中但不再从日志中重放的块。通常，如果元数据块被释放并重新分配为文件数据块，就会发生这种情况；在这种情况下，如果在文件块写入磁盘后进行日志重放，将会导致损坏。
 
 注意：此机制不用于表达"此日志块被此其他日志块取代"，作者（djwong）错误地认为。添加到事务中的任何块都将导致该块的所有现有撤销记录被删除。
+
+> 撤销块的主要目的是防止在重放早期事务时导致的潜在数据损坏。它们专门标记那些"曾经记录在日志中但不再应该从日志重放"的块。
 
 撤销块在`struct jbd2_journal_revoke_header_s`中描述，至少为16字节长，但使用完整块：
 
@@ -527,9 +529,9 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 | 0xC | __be32| r_count | 此块中使用的字节数。|
 | 0x10 | __be32或__be64 | blocks[0] | 要撤销的块。|
 
-在r_count之后是一个线性数组，包含由此事务有效撤销的块号。如果超级块公布64位块号支持，则每个块号的大小为8字节，否则为4字节。
+在`r_count`之后是一个线性数组，包含由此事务有效撤销的块号。如果超级块公布64位块号支持，则每个块号的大小为8字节，否则为4字节。
 
-如果设置了JBD2_FEATURE_INCOMPAT_CSUM_V2或JBD2_FEATURE_INCOMPAT_CSUM_V3，则撤销块的末尾是struct jbd2_journal_revoke_tail，格式如下：
+如果设置了`JBD2_FEATURE_INCOMPAT_CSUM_V2`或`JBD2_FEATURE_INCOMPAT_CSUM_V3`，则撤销块的末尾是`struct jbd2_journal_revoke_tail`，格式如下：
 
 | 偏移量 | 类型 | 名称 | 描述 |
 | ----- | ---- | ---- | ----- |
@@ -539,228 +541,81 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 
 提交块是一个哨兵，表示事务已完全写入日志。一旦此提交块到达日志，存储在此事务中的数据就可以写入其在磁盘上的最终位置。
 
-提交块由struct commit_header描述，长度为32字节（但使用完整块）：
+提交块由`struct commit_header`描述，长度为32字节（但使用完整块）：
 
 |偏移量|类型|名称|描述符|
 | ----- | ---- | ---- | ----- |
-| 0x0 | journal_header_s(开放编码)通用块头。0xCunsigned charh_chksum_type用于验证事务中数据块完整性的校验和类型。参见jbd2_checksum_type了解更多信息。0xDunsigned charh_chksum_size校验和使用的字节数。很可能是4。0xEunsigned charh_padding[2]0x10__be32h_chksum[JBD2_CHECKSUM_BYTES]32字节的空间用于存储校验和。如果设置了JBD2_FEATURE_INCOMPAT_CSUM_V2或JBD2_FEATURE_INCOMPAT_CSUM_V3，则第一个__be32是日志UUID和整个提交块的校验和，此字段为零。如果设置了JBD2_FEATURE_COMPAT_CHECKSUM，则第一个__be32是已写入事务的所有块的crc32。0x30__be64h_commit_sec事务提交的时间，以纪元以来的秒数表示。0x38__be32h_commit_nsec上述时间戳的纳秒分量。
-
-Offset
-
-Type
-
-Name
-
-Descriptor
-
-0x0
-
-journal_header_s
-
-(open coded)
-
-Common block header.
-
-0xC
-
-unsigned char
-
-h_chksum_type
-
-The type of checksum to use to verify the integrity of the data blocks in the transaction. See jbd2_checksum_type for more info.
-
-0xD
-
-unsigned char
-
-h_chksum_size
-
-The number of bytes used by the checksum. Most likely 4.
-
-0xE
-
-unsigned char
-
-h_padding[2]
-
-0x10
-
-__be32
-
-h_chksum[JBD2_CHECKSUM_BYTES]
-
-32 bytes of space to store checksums. If JBD2_FEATURE_INCOMPAT_CSUM_V2 or JBD2_FEATURE_INCOMPAT_CSUM_V3 are set, the first __be32 is the checksum of the journal UUID and the entire commit block, with this field zeroed. If JBD2_FEATURE_COMPAT_CHECKSUM is set, the first __be32 is the crc32 of all the blocks already written to the transaction.
-
-0x30
-
-__be64
-
-h_commit_sec
-
-The time that the transaction was committed, in seconds since the epoch.
-
-0x38
-
-__be32
-
-h_commit_nsec
-
-Nanoseconds component of the above timestamp.
+| 0x0 | journal_header_s | (开放编码) | 通用块头。|
+| 0xC | unsigned char | h_chksum_type | 用于验证事务中数据块完整性的校验和类型。参见jbd2_checksum_type了解更多信息。|
+| 0xD | unsigned char | h_chksum_size | 校验和使用的字节数。很可能是4。|
+| 0xE | unsigned char | h_padding[2] | | 
+| 0x10 | __be32 | h_chksum[JBD2_CHECKSUM_BYTES] | 32字节的空间用于存储校验和。如果设置了JBD2_FEATURE_INCOMPAT_CSUM_V2或JBD2_FEATURE_INCOMPAT_CSUM_V3，则第一个__be32是日志UUID和整个提交块的校验和，此字段为零。如果设置了JBD2_FEATURE_COMPAT_CHECKSUM，则第一个__be32是已写入事务的所有块的crc32。|
+| 0x30 | __be64 | h_commit_sec | 事务提交的时间，以纪元以来的秒数表示。|
+| 0x38 | __be32 | h_commit_nsec | 上述时间戳的纳秒分量。|
 
 ### 3.6.9. 快速提交
 
-快速提交区域组织为标签长度值的日志。每个TLV的开头都有一个struct ext4_fc_tl，存储整个字段的标签和长度。它后面跟着特定于标签的可变长度值。以下是支持的标签及其含义的列表：
+快速提交区域组织为标签长度值的日志。每个TLV的开头都有一个`struct ext4_fc_tl`，存储整个字段的标签和长度。它后面跟着特定于标签的可变长度值。以下是支持的标签及其含义的列表：
 
-Tag
+| 标签 | 含义 | 值结构 | 描述 |
+| --- | ---- | ------ | ---- |
+| EXT4_FC_TAG_HEAD | 快速提交区域头 | struct ext4_fc_head | 存储应在其后应用这些快速提交的事务的TID。|
+| EXT4_FC_TAG_ADD_RANGE | 向inode添加范围 | struct ext4_fc_add_range | 存储inode号和要添加到此inode中的范围|
+| EXT4_FC_TAG_DEL_RANGE | 从inode中删除逻辑偏移 | struct ext4_fc_del_range | 存储inode号和需要删除的逻辑偏移范围|
+| EXT4_FC_TAG_CREAT | 为新创建的文件创建目录条目 | struct ext4_fc_dentry_info | 存储父inode号、inode号以及新创建文件的目录条目| 
+| EXT4_FC_TAG_LINK | 将目录条目链接到inodestruct | ext4_fc_dentry_info | 存储父inode号、inode号和目录条目
+| EXT4_FC_TAG_UNLINK | 取消链接inode的目录条目 | struct ext4_fc_dentry_info | 存储父inode号、inode号和目录条目EXT4_FC_TAG_PAD填充（未使用区域）无快速提交区域中未使用的字节。|
+| EXT4_FC_TAG_TAIL | 标记快速提交的结束 | struct ext4_fc_tail | 存储提交的TID，此标签表示结束的快速提交的CRC |
 
-Meaning
+### 3.6.10. 快速提交重放幂等性
 
-Value struct
+快速提交标签本质上是幂等的，前提是恢复代码遵循某些规则。提交路径在提交时遵循的指导原则是，它存储特定操作的结果，而不是存储过程。
 
-Description
+让我们考虑这个重命名操作：'mv /a /b'。假设目录条目'/a'与inode 10关联。在快速提交期间，我们不是将此操作存储为"将a重命名为b"的过程，而是将生成的文件系统状态存储为结果的"系列"：
 
-EXT4_FC_TAG_HEAD
++ 链接目录条目b到inode 10
++ 取消链接目录条目a
++ 具有有效引用计数的inode 10
 
-Fast commit area header
+现在，当恢复代码运行时，它需要在文件系统上"强制执行"此状态。这就是保证快速提交重放幂等性的原因。
 
-struct ext4_fc_head
+让我们以一个不是幂等的过程为例，看看快速提交如何使其变为幂等。考虑以下操作序列：
 
-Stores the TID of the transaction after which these fast commits should be applied.
+1. `rm A`
+2. `mv B A`
+3. `read A`
 
-EXT4_FC_TAG_ADD_RANGE
+如果我们按原样存储此操作序列，则重放不是幂等的。假设在重放期间，我们在(2)之后崩溃。在第二次重放期间，文件A（实际上是作为"mv B A"操作的结果创建的）将被删除。因此，当我们尝试读取A时，名为A的文件将不存在。所以，这个操作序列不是幂等的。然而，如上所述，快速提交不是存储过程，而是存储每个过程的结果。因此，上述过程的快速提交日志将如下所示：
 
-Add extent to inode
+（假设重放前目录条目A链接到inode 10，目录条目B链接到inode 11）
 
-struct ext4_fc_add_range
+1. 取消链接A
+2. 将A链接到inode 11
+3. 取消链接B
+4. Inode 11
 
-Stores the inode number and extent to be added in this inode
-
-EXT4_FC_TAG_DEL_RANGE
-
-Remove logical offsets to inode
-
-struct ext4_fc_del_range
-
-Stores the inode number and the logical offset range that needs to be removed
-
-EXT4_FC_TAG_CREAT
-
-Create directory entry for a newly created file
-
-struct ext4_fc_dentry_info
-
-Stores the parent inode number, inode number and directory entry of the newly created file
-
-EXT4_FC_TAG_LINK
-
-Link a directory entry to an inode
-
-struct ext4_fc_dentry_info
-
-Stores the parent inode number, inode number and directory entry
-
-EXT4_FC_TAG_UNLINK
-
-Unlink a directory entry of an inode
-
-struct ext4_fc_dentry_info
-
-Stores the parent inode number, inode number and directory entry
-
-EXT4_FC_TAG_PAD
-
-Padding (unused area)
-
-None
-
-Unused bytes in the fast commit area.
-
-EXT4_FC_TAG_TAIL
-
-Mark the end of a fast commit
-
-struct ext4_fc_tail
-
-Stores the TID of the commit, CRC of the fast commit of which this tag represents the end of
-
-### 3.6.10. Fast Commit Replay Idempotence
-
-Fast commits tags are idempotent in nature provided the recovery code follows certain rules. The guiding principle that the commit path follows while committing is that it stores the result of a particular operation instead of storing the procedure.
-
-Let’s consider this rename operation: ‘mv /a /b’. Let’s assume dirent ‘/a’ was associated with inode 10. During fast commit, instead of storing this operation as a procedure “rename a to b”, we store the resulting file system state as a “series” of outcomes:
-
-Link dirent b to inode 10
-
-Unlink dirent a
-
-Inode 10 with valid refcount
-
-Now when recovery code runs, it needs “enforce” this state on the file system. This is what guarantees idempotence of fast commit replay.
-
-Let’s take an example of a procedure that is not idempotent and see how fast commits make it idempotent. Consider following sequence of operations:
-
-rm A
-
-mv B A
-
-read A
-
-If we store this sequence of operations as is then the replay is not idempotent. Let’s say while in replay, we crash after (2). During the second replay, file A (which was actually created as a result of “mv B A” operation) would get deleted. Thus, file named A would be absent when we try to read A. So, this sequence of operations is not idempotent. However, as mentioned above, instead of storing the procedure fast commits store the outcome of each procedure. Thus the fast commit log for above procedure would be as follows:
-
-(Let’s assume dirent A was linked to inode 10 and dirent B was linked to inode 11 before the replay)
-
-Unlink A
-
-Link A to inode 11
-
-Unlink B
-
-Inode 11
-
-If we crash after (3) we will have file A linked to inode 11. During the second replay, we will remove file A (inode 11). But we will create it back and make it point to inode 11. We won’t find B, so we’ll just skip that step. At this point, the refcount for inode 11 is not reliable, but that gets fixed by the replay of last inode 11 tag. Thus, by converting a non-idempotent procedure into a series of idempotent outcomes, fast commits ensured idempotence during the replay.
+如果我们在(3)之后崩溃，我们将有文件A链接到inode 11。在第二次重放期间，我们将删除文件A（inode 11）。但我们会将其重新创建并使其指向inode 11。我们找不到B，所以我们将跳过该步骤。此时，inode 11的引用计数不可靠，但这通过最后一个inode 11标签的重放得到修复。因此，通过将非幂等过程转换为一系列幂等结果，快速提交确保了重放期间的幂等性。
 
 ### 3.6.11. Journal Checkpoint
 
-Checkpointing the journal ensures all transactions and their associated buffers are submitted to the disk. In-progress transactions are waited upon and included in the checkpoint. Checkpointing is used internally during critical updates to the filesystem including journal recovery, filesystem resizing, and freeing of the journal_t structure.
+检查点日志确保所有事务及其关联的缓冲区都提交到磁盘。等待进行中的事务并将其包含在检查点中。检查点在文件系统关键更新期间内部使用，包括日志恢复、文件系统调整大小和释放`journal_t`结构。
 
-A journal checkpoint can be triggered from userspace via the ioctl EXT4_IOC_CHECKPOINT. This ioctl takes a single, u64 argument for flags. Currently, three flags are supported. First, EXT4_IOC_CHECKPOINT_FLAG_DRY_RUN can be used to verify input to the ioctl. It returns error if there is any invalid input, otherwise it returns success without performing any checkpointing. This can be used to check whether the ioctl exists on a system and to verify there are no issues with arguments or flags. The other two flags are EXT4_IOC_CHECKPOINT_FLAG_DISCARD and EXT4_IOC_CHECKPOINT_FLAG_ZEROOUT. These flags cause the journal blocks to be discarded or zero-filled, respectively, after the journal checkpoint is complete. EXT4_IOC_CHECKPOINT_FLAG_DISCARD and EXT4_IOC_CHECKPOINT_FLAG_ZEROOUT cannot both be set. The ioctl may be useful when snapshotting a system or for complying with content deletion SLOs.
+> 检查点的主要功能是确保所有事务及其关联的缓冲区都已提交到磁盘。检查点会等待所有进行中的事务完成，并将它们包含在检查点处理中。
+
+可以通过`ioctl EXT4_IOC_CHECKPOINT`从用户空间触发日志检查点。此ioctl接受单个u64参数作为标志。目前，支持三个标志。首先，`EXT4_IOC_CHECKPOINT_FLAG_DRY_RUN`可用于验证ioctl的输入。如果有任何无效输入，它返回错误，否则在不执行任何检查点的情况下返回成功。这可用于检查系统上是否存在ioctl，并验证参数或标志没有问题。其他两个标志是`EXT4_IOC_CHECKPOINT_FLAG_DISCARD`和`EXT4_IOC_CHECKPOINT_FLAG_ZEROOUT`。这些标志分别导致日志块在日志检查点完成后被丢弃或填充零。`EXT4_IOC_CHECKPOINT_FLAG_DISCARD`和`EXT4_IOC_CHECKPOINT_FLAG_ZEROOUT`不能同时设置。在对系统进行快照或遵守内容删除SLO时，此ioctl可能很有用。
 
 ## 3.7. Orphan file
 
-In unix there can inodes that are unlinked from directory hierarchy but that are still alive because they are open. In case of crash the filesystem has to clean up these inodes as otherwise they (and the blocks referenced from them) would leak. Similarly if we truncate or extend the file, we need not be able to perform the operation in a single journalling transaction. In such case we track the inode as orphan so that in case of crash extra blocks allocated to the file get truncated.
+在Unix中，可能有从目录层次结构中取消链接但仍然活着的inode，因为它们是打开的。在崩溃的情况下，文件系统必须清理这些inode，否则它们（以及从它们引用的块）会泄漏。同样，如果我们截断或扩展文件，我们可能无法在单个日志事务中执行操作。在这种情况下，我们将inode追踪为孤儿，以便在崩溃的情况下，分配给文件的额外块会被截断。
 
-Traditionally ext4 tracks orphan inodes in a form of single linked list where superblock contains the inode number of the last orphan inode (s_last_orphan field) and then each inode contains inode number of the previously orphaned inode (we overload i_dtime inode field for this). However this filesystem global single linked list is a scalability bottleneck for workloads that result in heavy creation of orphan inodes. When orphan file feature (COMPAT_ORPHAN_FILE) is enabled, the filesystem has a special inode (referenced from the superblock through s_orphan_file_inum) with several blocks. Each of these blocks has a structure:
+> 注：当启用了孤儿文件特性(COMPAT_ORPHAN_FILE)时，文件系统会使用一个特殊的inode来记录孤儿文件信息。这个特殊inode通过超级块中的`s_orphan_file_inum`字段引用，并包含几个数据块来存储孤儿文件信息。
 
-Offset
+传统上，ext4以单链表的形式跟踪孤儿inode，其中超级块包含最后一个孤儿inode的inode号（`s_last_orphan`字段），然后每个inode包含先前孤立的inode的inode号（我们为此重载`i_dtime inode`字段）。然而，这个文件系统全局单链表对于导致大量创建孤儿inode的工作负载来说是一个可扩展性瓶颈。启用孤儿文件特性(`COMPAT_ORPHAN_FILE`)时，文件系统有一个特殊的inode（通过超级块中的`s_orphan_file_inum`引用），带有几个块。这些块中的每一个都有一个结构：
 
-Type
+| 偏移量 | 类型 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+| 0x0 | __le32条目数组 | 孤儿inode条目 | 每个__le32条目要么为空（0），要么包含孤儿inode的inode号。|
+| blocksize-8 | __le32 | ob_magic | 存储在孤儿块尾部的魔术值(0x0b10ca04)|
+| blocksize-4 | __le32 | ob_checksum | 孤儿块的校验和。|
 
-Name
-
-Description
-
-0x0
-
-Array of __le32 entries
-
-Orphan inode entries
-
-Each __le32 entry is either empty (0) or it contains inode number of an orphan inode.
-
-blocksize-8
-
-__le32
-
-ob_magic
-
-Magic value stored in orphan block tail (0x0b10ca04)
-
-blocksize-4
-
-__le32
-
-ob_checksum
-
-Checksum of the orphan block.
-
-When a filesystem with orphan file feature is writeably mounted, we set RO_COMPAT_ORPHAN_PRESENT feature in the superblock to indicate there may be valid orphan entries. In case we see this feature when mounting the filesystem, we read the whole orphan file and process all orphan inodes found there as usual. When cleanly unmounting the filesystem we remove the RO_COMPAT_ORPHAN_PRESENT feature to avoid unnecessary scanning of the orphan file and also make the filesystem fully compatible with older kernels.
+当具有孤儿文件特性的文件系统可写挂载时，我们在超级块中设置`RO_COMPAT_ORPHAN_PRESENT`特性，以指示可能有有效的孤儿条目。如果在挂载文件系统时看到此特性，我们读取整个孤儿文件并像往常一样处理所有找到的孤儿inode。当干净地卸载文件系统时，我们删除`RO_COMPAT_ORPHAN_PRESENT`特性，以避免不必要地扫描孤儿文件，并使文件系统与旧内核完全兼容。

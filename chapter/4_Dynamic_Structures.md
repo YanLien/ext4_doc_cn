@@ -2,1743 +2,508 @@
 
 动态元数据是在分配文件和块到文件时即时创建的。
 
-4.1. Index Nodes
-In a regular UNIX filesystem, the inode stores all the metadata pertaining to the file (time stamps, block maps, extended attributes, etc), not the directory entry. To find the information associated with a file, one must traverse the directory files to find the directory entry associated with a file, then load the inode to find the metadata for that file. ext4 appears to cheat (for performance reasons) a little bit by storing a copy of the file type (normally stored in the inode) in the directory entry. (Compare all this to FAT, which stores all the file information directly in the directory entry, but does not support hard links and is in general more seek-happy than ext4 due to its simpler block allocator and extensive use of linked lists.)
-
-The inode table is a linear array of struct ext4_inode. The table is sized to have enough blocks to store at least sb.s_inode_size * sb.s_inodes_per_group bytes. The number of the block group containing an inode can be calculated as (inode_number - 1) / sb.s_inodes_per_group, and the offset into the group’s table is (inode_number - 1) % sb.s_inodes_per_group. There is no inode 0.
-
-The inode checksum is calculated against the FS UUID, the inode number, and the inode structure itself.
-
-The inode table entry is laid out in struct ext4_inode.
-
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le16
-
-i_mode
-
-File mode. See the table i_mode below.
-
-0x2
-
-__le16
-
-i_uid
-
-Lower 16-bits of Owner UID.
-
-0x4
-
-__le32
-
-i_size_lo
-
-Lower 32-bits of size in bytes.
-
-0x8
-
-__le32
-
-i_atime
-
-Last access time, in seconds since the epoch. However, if the EA_INODE inode flag is set, this inode stores an extended attribute value and this field contains the checksum of the value.
-
-0xC
-
-__le32
-
-i_ctime
-
-Last inode change time, in seconds since the epoch. However, if the EA_INODE inode flag is set, this inode stores an extended attribute value and this field contains the lower 32 bits of the attribute value’s reference count.
-
-0x10
-
-__le32
-
-i_mtime
-
-Last data modification time, in seconds since the epoch. However, if the EA_INODE inode flag is set, this inode stores an extended attribute value and this field contains the number of the inode that owns the extended attribute.
-
-0x14
-
-__le32
-
-i_dtime
-
-Deletion Time, in seconds since the epoch.
-
-0x18
-
-__le16
-
-i_gid
-
-Lower 16-bits of GID.
-
-0x1A
-
-__le16
-
-i_links_count
-
-Hard link count. Normally, ext4 does not permit an inode to have more than 65,000 hard links. This applies to files as well as directories, which means that there cannot be more than 64,998 subdirectories in a directory (each subdirectory’s ‘..’ entry counts as a hard link, as does the ‘.’ entry in the directory itself). With the DIR_NLINK feature enabled, ext4 supports more than 64,998 subdirectories by setting this field to 1 to indicate that the number of hard links is not known.
-
-0x1C
-
-__le32
-
-i_blocks_lo
-
-Lower 32-bits of “block” count. If the huge_file feature flag is not set on the filesystem, the file consumes i_blocks_lo 512-byte blocks on disk. If huge_file is set and EXT4_HUGE_FILE_FL is NOT set in inode.i_flags, then the file consumes i_blocks_lo + (i_blocks_hi << 32) 512-byte blocks on disk. If huge_file is set and EXT4_HUGE_FILE_FL IS set in inode.i_flags, then this file consumes (i_blocks_lo + i_blocks_hi << 32) filesystem blocks on disk.
-
-0x20
-
-__le32
-
-i_flags
-
-Inode flags. See the table i_flags below.
-
-0x24
-
-4 bytes
-
-i_osd1
-
-See the table i_osd1 for more details.
-
-0x28
-
-60 bytes
-
-i_block[EXT4_N_BLOCKS=15]
-
-Block map or extent tree. See the section “The Contents of inode.i_block”.
-
-0x64
-
-__le32
-
-i_generation
-
-File version (for NFS).
-
-0x68
-
-__le32
-
-i_file_acl_lo
-
-Lower 32-bits of extended attribute block. ACLs are of course one of many possible extended attributes; I think the name of this field is a result of the first use of extended attributes being for ACLs.
-
-0x6C
-
-__le32
-
-i_size_high / i_dir_acl
-
-Upper 32-bits of file/directory size. In ext2/3 this field was named i_dir_acl, though it was usually set to zero and never used.
-
-0x70
-
-__le32
-
-i_obso_faddr
-
-(Obsolete) fragment address.
-
-0x74
-
-12 bytes
-
-i_osd2
-
-See the table i_osd2 for more details.
-
-0x80
-
-__le16
-
-i_extra_isize
-
-Size of this inode - 128. Alternately, the size of the extended inode fields beyond the original ext2 inode, including this field.
-
-0x82
-
-__le16
-
-i_checksum_hi
-
-Upper 16-bits of the inode checksum.
-
-0x84
-
-__le32
-
-i_ctime_extra
-
-Extra change time bits. This provides sub-second precision. See Inode Timestamps section.
-
-0x88
-
-__le32
-
-i_mtime_extra
-
-Extra modification time bits. This provides sub-second precision.
-
-0x8C
-
-__le32
-
-i_atime_extra
-
-Extra access time bits. This provides sub-second precision.
-
-0x90
-
-__le32
-
-i_crtime
-
-File creation time, in seconds since the epoch.
-
-0x94
-
-__le32
-
-i_crtime_extra
-
-Extra file creation time bits. This provides sub-second precision.
-
-0x98
-
-__le32
-
-i_version_hi
-
-Upper 32-bits for version number.
-
-0x9C
-
-__le32
-
-i_projid
-
-Project ID.
-
-The i_mode value is a combination of the following flags:
-
-Value
-
-Description
-
-0x1
-
-S_IXOTH (Others may execute)
-
-0x2
-
-S_IWOTH (Others may write)
-
-0x4
-
-S_IROTH (Others may read)
-
-0x8
-
-S_IXGRP (Group members may execute)
-
-0x10
-
-S_IWGRP (Group members may write)
-
-0x20
-
-S_IRGRP (Group members may read)
-
-0x40
-
-S_IXUSR (Owner may execute)
-
-0x80
-
-S_IWUSR (Owner may write)
-
-0x100
-
-S_IRUSR (Owner may read)
-
-0x200
-
-S_ISVTX (Sticky bit)
-
-0x400
-
-S_ISGID (Set GID)
-
-0x800
-
-S_ISUID (Set UID)
-
-These are mutually-exclusive file types:
-
-0x1000
-
-S_IFIFO (FIFO)
-
-0x2000
-
-S_IFCHR (Character device)
-
-0x4000
-
-S_IFDIR (Directory)
-
-0x6000
-
-S_IFBLK (Block device)
-
-0x8000
-
-S_IFREG (Regular file)
-
-0xA000
-
-S_IFLNK (Symbolic link)
-
-0xC000
-
-S_IFSOCK (Socket)
-
-The i_flags field is a combination of these values:
-
-Value
-
-Description
-
-0x1
-
-This file requires secure deletion (EXT4_SECRM_FL). (not implemented)
-
-0x2
-
-This file should be preserved, should undeletion be desired (EXT4_UNRM_FL). (not implemented)
-
-0x4
-
-File is compressed (EXT4_COMPR_FL). (not really implemented)
-
-0x8
-
-All writes to the file must be synchronous (EXT4_SYNC_FL).
-
-0x10
-
-File is immutable (EXT4_IMMUTABLE_FL).
-
-0x20
-
-File can only be appended (EXT4_APPEND_FL).
-
-0x40
-
-The dump(1) utility should not dump this file (EXT4_NODUMP_FL).
-
-0x80
-
-Do not update access time (EXT4_NOATIME_FL).
-
-0x100
-
-Dirty compressed file (EXT4_DIRTY_FL). (not used)
-
-0x200
-
-File has one or more compressed clusters (EXT4_COMPRBLK_FL). (not used)
-
-0x400
-
-Do not compress file (EXT4_NOCOMPR_FL). (not used)
-
-0x800
-
-Encrypted inode (EXT4_ENCRYPT_FL). This bit value previously was EXT4_ECOMPR_FL (compression error), which was never used.
-
-0x1000
-
-Directory has hashed indexes (EXT4_INDEX_FL).
-
-0x2000
-
-AFS magic directory (EXT4_IMAGIC_FL).
-
-0x4000
-
-File data must always be written through the journal (EXT4_JOURNAL_DATA_FL).
-
-0x8000
-
-File tail should not be merged (EXT4_NOTAIL_FL). (not used by ext4)
-
-0x10000
-
-All directory entry data should be written synchronously (see dirsync) (EXT4_DIRSYNC_FL).
-
-0x20000
-
-Top of directory hierarchy (EXT4_TOPDIR_FL).
-
-0x40000
-
-This is a huge file (EXT4_HUGE_FILE_FL).
-
-0x80000
-
-Inode uses extents (EXT4_EXTENTS_FL).
-
-0x100000
-
-Verity protected file (EXT4_VERITY_FL).
-
-0x200000
-
-Inode stores a large extended attribute value in its data blocks (EXT4_EA_INODE_FL).
-
-0x400000
-
-This file has blocks allocated past EOF (EXT4_EOFBLOCKS_FL). (deprecated)
-
-0x01000000
-
-Inode is a snapshot (EXT4_SNAPFILE_FL). (not in mainline)
-
-0x04000000
-
-Snapshot is being deleted (EXT4_SNAPFILE_DELETED_FL). (not in mainline)
-
-0x08000000
-
-Snapshot shrink has completed (EXT4_SNAPFILE_SHRUNK_FL). (not in mainline)
-
-0x10000000
-
-Inode has inline data (EXT4_INLINE_DATA_FL).
-
-0x20000000
-
-Create children with the same project ID (EXT4_PROJINHERIT_FL).
-
-0x80000000
-
-Reserved for ext4 library (EXT4_RESERVED_FL).
-
-Aggregate flags:
-
-0x705BDFFF
-
-User-visible flags.
-
-0x604BC0FF
-
-User-modifiable flags. Note that while EXT4_JOURNAL_DATA_FL and EXT4_EXTENTS_FL can be set with setattr, they are not in the kernel’s EXT4_FL_USER_MODIFIABLE mask, since it needs to handle the setting of these flags in a special manner and they are masked out of the set of flags that are saved directly to i_flags.
-
-The osd1 field has multiple meanings depending on the creator:
+## 4.1. Index Nodes
+
+在常规UNIX文件系统中，inode存储所有与文件相关的元数据（时间戳、块映射、扩展属性等），而不是目录条目。要查找与文件相关的信息，必须遍历目录文件以找到与文件关联的目录条目，然后加载inode以查找该文件的元数据。ext4似乎为了性能原因有点"作弊"，它在目录条目中存储了文件类型（通常存储在inode中）的副本。（将这一切与FAT进行比较，FAT直接在目录条目中存储所有文件信息，但不支持硬链接，并且由于其简单的块分配器和对链表的广泛使用，通常比ext4更依赖于磁盘寻道。）
+
+inode表是`struct ext4_inode`的线性数组。该表的大小足以存储至少`sb.s_inode_size * sb.s_inodes_per_group`字节的块。包含inode的块组的编号可以计算为`(inode_number - 1) / sb.s_inodes_per_group`，组表中的偏移量是`(inode_number - 1) % sb.s_inodes_per_group`。没有inode 0。
+
+inode校验和是针对FS UUID、inode编号和inode结构本身计算的。
+
+inode表条目在struct ext4_inode中布局如下：
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+| 0x0 | __le16 | i_mode | 文件模式。参见下面的i_mode表。|
+| 0x2 | __le16 | i_uid | 所有者UID的低16位。|
+| 0x4 | __le32 | i_size_lo | 以字节为单位的大小的低32位。|
+| 0x8 | __le32 | i_atime | 最后访问时间，从纪元开始的秒数。但是，如果设置了EA_INODE inode标志，此inode存储扩展属性值，此字段包含值的校验和。|
+| 0xC | __le32 | i_ctime | 最后inode更改时间，从纪元开始的秒数。但是，如果设置了EA_INODE inode标志，此inode存储扩展属性值，此字段包含属性值引用计数的低32位。|
+| 0x10 | __le32 | i_mtime | 最后数据修改时间，从纪元开始的秒数。但是，如果设置了EA_INODE inode标志，此inode存储扩展属性值，此字段包含拥有扩展属性的inode编号。|
+| 0x14 | __le32 | i_dtime | 删除时间，从纪元开始的秒数。|
+| 0x18 | __le16 | i_gid | GID的低16位。|
+| 0x1A | __le16 | i_links_count | 硬链接计数。通常，ext4不允许一个inode有超过65,000个硬链接。这适用于文件和目录，这意味着一个目录中不能有超过64,998个子目录（每个子目录的'..'条目计为一个硬链接，目录本身的'.'条目也是）。启用DIR_NLINK功能后，ext4通过将此字段设置为1来支持超过64,998个子目录，表示硬链接数未知。
+| 0x1C | __le32 | i_blocks_lo | "块"计数的低32位。如果文件系统上未设置huge_file特性标志，则文件占用i_blocks_lo个512字节块。如果设置了huge_file且inode.i_flags中未设置EXT4_HUGE_FILE_FL，则文件占用i_blocks_lo + (i_blocks_hi << 32)个512字节块。如果设置了huge_file且inode.i_flags中设置了EXT4_HUGE_FILE_FL，则此文件占用(i_blocks_lo + i_blocks_hi << 32)个文件系统块。|
+| 0x20 | __le32 | i_flags | Inode标志。参见下面的i_flags表。0x244 bytesi_osd1有关更多详情，请参见i_osd1表。0x2860 bytesi_block[EXT4_N_BLOCKS=15]块映射或区段树。请参阅"inode.i_block的内容"部分。
+| 0x64 | __le32 | i_generation | 文件版本（用于NFS）。|
+| 0x68 | __le32 | i_file_acl_lo | 扩展属性块的低32位。ACL当然是多种可能的扩展属性之一；我认为这个字段的名称是由于扩展属性的第一次使用是用于ACL。|
+| 0x6C | __le32 | i_size_high | i_dir_acl文件/目录大小的高32位。在ext2/3中，此字段被命名为i_dir_acl，尽管它通常设置为零并且从未使用过。|
+| 0x70 | __le32 | i_obso_faddr| （已废弃）片段地址。|
+| 0x74 | 12 bytes | i_osd2 | 有关更多详情，请参见`i_osd2`表。|
+| 0x80 | __le16 | i_extra_isize | 此inode的大小 - 128。或者说，超出原始ext2 inode的扩展inode字段的大小，包括此字段。|
+| 0x82 | __le16 | i_checksum_hiinode | 校验和的高16位。|
+| 0x84 | __le32 | i_ctime_extra | 额外的更改时间位。这提供亚秒精度。请参阅Inode时间戳部分。|
+| 0x88 | __le32 | i_mtime_extra | 额外的修改时间位。这提供亚秒精度。|
+| 0x8C | __le32 | i_atime_extra | 额外的访问时间位。这提供亚秒精度。|
+| 0x90 | __le32 | i_crtime | 文件创建时间，从纪元开始的秒数。| 
+| 0x94 | __le32 | i_crtime_extra | 额外的文件创建时间位。这提供亚秒精度。|
+| 0x98 | __le32 | i_version_hi | 版本号的高32位。|
+| 0x9C | __le32 | i_projid | 项目ID。|
+
+i_mode值是以下标志的组合：
+
+| 值 | 描述 |
+| -- | --- |
+| `0x1` | `S_IXOTH`（其他人可执行）|
+| `0x2` | `S_IWOTH`（其他人可写入）|
+| `0x4` | `S_IROTH`（其他人可读取）| 
+| `0x8` | `S_IXGRP`（组成员可执行）| 
+| `0x10` | `S_IWGRP`（组成员可写入） |
+| `0x20` | `S_IRGRP`（组成员可读取）| 
+| `0x40` | `S_IXUSR`（所有者可执行）|
+| `0x80` | `S_IWUSR`（所有者可写入）| 
+| `0x100` | `S_IRUSR`（所有者可读取）|
+| `0x200` | `S_ISVTX` （粘滞位）|
+| `0x400` | `S_ISGID`（设置GID）| 
+| `0x800` | `S_ISUID`（设置UID）|
+| | 这些是互斥的文件类型：|
+| `0x1000` | `S_IFIFO`（FIFO）| 
+| `0x2000` | `S_IFCHR`（字符设备）|
+| `0x4000` | `S_IFDIR`（目录）|
+| `0x6000` | `S_IFBLK`（块设备）|
+| `0x8000` | `S_IFREG`（常规文件）|
+| `0xA000` | `S_IFLNK`（符号链接）| 
+| `0xC000` | `S_IFSOCK`（套接字）|
+
+`i_flags`字段是以下值的组合：
+
+| 值 | 描述 |
+| -- | ---- |
+| `0x1` | 此文件需要安全删除(EXT4_SECRM_FL)。（未实现）| |
+| `0x2` | 此文件应该被保留，如果需要取消删除(EXT4_UNRM_FL)。（未实现） |
+| `0x4` | 文件已压缩(EXT4_COMPR_FL)。（未真正实现） |
+| `0x8` | 对文件的所有写入必须同步(EXT4_SYNC_FL)。 |
+| `0x10` | 文件不可变(EXT4_IMMUTABLE_FL)。 |
+| `0x20` | 文件只能追加(EXT4_APPEND_FL)。 |
+| `0x40` | dump(1)实用程序不应该转储此文件(EXT4_NODUMP_FL)。 |
+| `0x80` | 不更新访问时间(EXT4_NOATIME_FL)。 |
+| `0x100` | 脏压缩文件(EXT4_DIRTY_FL)。（未使用） |
+| `0x200` | 文件有一个或多个压缩集群(EXT4_COMPRBLK_FL)。（未使用） |
+| `0x400` | 不压缩文件(EXT4_NOCOMPR_FL)。（未使用） |
+| `0x800` | 加密inode(EXT4_ENCRYPT_FL)。此位值以前是EXT4_ECOMPR_FL（压缩错误），从未使用过。 |
+| `0x1000` | 目录有哈希索引(EXT4_INDEX_FL)。 |
+| `0x2000` | AFS魔术目录(EXT4_IMAGIC_FL)。 |
+| `0x4000` | 文件数据必须始终通过日志写入(EXT4_JOURNAL_DATA_FL)。 |
+| `0x8000` | 文件尾部不应合并(EXT4_NOTAIL_FL)。（ext4未使用） |
+| `0x10000` | 所有目录条目数据都应同步写入（见dirsync）(EXT4_DIRSYNC_FL)。 |
+| `0x20000` | 目录层次结构的顶部(EXT4_TOPDIR_FL)。 |
+| `0x40000` | 这是一个巨大的文件(EXT4_HUGE_FILE_FL)。 |
+| `0x80000` | Inode使用区段(EXT4_EXTENTS_FL)。 |
+| `0x100000` | 完整性保护文件(EXT4_VERITY_FL)。 |
+| `0x200000` | Inode在其数据块中存储大型扩展属性值(EXT4_EA_INODE_FL)。 |
+| `0x400000` | 此文件在EOF之后有分配的块(EXT4_EOFBLOCKS_FL)。（已弃用） |
+| `0x01000000` | Inode是快照(EXT4_SNAPFILE_FL)。（不在主线中） |
+| `0x04000000` | 快照正在被删除(EXT4_SNAPFILE_DELETED_FL)。（不在主线中） |
+| `0x08000000` | 快照收缩已完成(EXT4_SNAPFILE_SHRUNK_FL)。（不在主线中） |
+| `0x10000000` | Inode有内联数据(EXT4_INLINE_DATA_FL)。 |
+| `0x20000000` | 创建具有相同项目ID的子项(EXT4_PROJINHERIT_FL)。 |
+| `0x80000000` | 保留给ext4库(EXT4_RESERVED_FL)。 |
+
+聚合标志：
+
+| 值 | 描述 |
+| -- | --- |
+| `0x705BDFFF` | 用户可见标志。|
+| `0x604BC0FF` | 用户可修改标志。请注意，虽然可以使用setattr设置EXT4_JOURNAL_DATA_FL和EXT4_EXTENTS_FL，但它们不在内核的EXT4_FL_USER_MODIFIABLE掩码中，因为它需要以特殊方式处理这些标志的设置，它们被从直接保存到i_flags的标志集中掩盖。|
+
+osd1字段根据创建者有不同的含义：
 
 Linux:
 
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-l_i_version
-
-Inode version. However, if the EA_INODE inode flag is set, this inode stores an extended attribute value and this field contains the upper 32 bits of the attribute value’s reference count.
+| 偏移量 | 大小 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+| `0x0` | __le32 | l_i_version | Inode版本。但是，如果设置了EA_INODE inode标志，此inode存储扩展属性值，此字段包含属性值引用计数的高32位。|
 
 Hurd:
 
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-h_i_translator
-
-??
+| 偏移量 | 大小 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+| `0x0` | __le32 | h_i_translator | ?? |
 
 Masix:
 
-Offset
+| 偏移量 | 大小 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+| `0x0` | __le32 | m_i_reserved | ?? |
 
-Size
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-m_i_reserved
-
-??
-
-The osd2 field has multiple meanings depending on the filesystem creator:
+osd2字段根据文件系统创建者有不同的含义：
 
 Linux:
 
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le16
-
-l_i_blocks_high
-
-Upper 16-bits of the block count. Please see the note attached to i_blocks_lo.
-
-0x2
-
-__le16
-
-l_i_file_acl_high
-
-Upper 16-bits of the extended attribute block (historically, the file ACL location). See the Extended Attributes section below.
-
-0x4
-
-__le16
-
-l_i_uid_high
-
-Upper 16-bits of the Owner UID.
-
-0x6
-
-__le16
-
-l_i_gid_high
-
-Upper 16-bits of the GID.
-
-0x8
-
-__le16
-
-l_i_checksum_lo
-
-Lower 16-bits of the inode checksum.
-
-0xA
-
-__le16
-
-l_i_reserved
-
-Unused.
+| 偏移量 | 大小 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+| `0x0` | __le16 | l_i_blocks_high | 块计数的高16位。请参阅附在i_blocks_lo上的注释。| 
+| `0x2` | __le16 | l_i_file_acl_high | 扩展属性块的高16位（历史上是文件ACL位置）。请参阅下面的扩展属性部分。| 
+| `0x4` | __le16 | l_i_uid_high | 所有者UID的高16位。| 
+| `0x6` | __le16 | l_i_gid_high | GID的高16位。| 
+| `0x8` | __le16 | l_i_checksum_lo | inode校验和的低16位。|
+| `0xA` | __le16 | l_i_reserved | 未使用。|
 
 Hurd:
 
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le16
-
-h_i_reserved1
-
-??
-
-0x2
-
-__u16
-
-h_i_mode_high
-
-Upper 16-bits of the file mode.
-
-0x4
-
-__le16
-
-h_i_uid_high
-
-Upper 16-bits of the Owner UID.
-
-0x6
-
-__le16
-
-h_i_gid_high
-
-Upper 16-bits of the GID.
-
-0x8
-
-__u32
-
-h_i_author
-
-Author code?
+| 偏移量 | 大小 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+| `0x0` | __le16 | h_i_reserved1 | ?? |
+| `0x2` | __u16 | h_i_mode_high | 文件模式的高16位。|
+| `0x4` | __le16 | h_i_uid_high | 所有者UID的高16位。|
+| `0x6` | __le16 | h_i_gid_high | GID的高16位。|
+| `0x8` | __u32 | h_i_author | 作者代码？|
 
 Masix:
 
-Offset
+| 偏移量 | 大小 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+| `0x0` | __le16 | h_i_reserved1 | ?? |
+| `0x2` | __u16 | m_i_file_acl_high | 扩展属性块的高16位（历史上是文件ACL位置）。| 
+| `0x4` | __u32 | m_i_reserved2\[2\] | ?? |
 
-Size
+### 4.1.1. Inode大小
 
-Name
+在ext2和ext3中，inode结构大小固定为128字节（`EXT2_GOOD_OLD_INODE_SIZE`），每个inode的磁盘记录大小为128字节。从ext4开始，可以在格式化时为文件系统中的所有inode分配更大的磁盘上inode，以提供超出原始ext2 inode末尾的空间。磁盘上inode记录大小记录在超级块的`s_inode_size`中。每个inode中实际使用的超出原始128字节ext2 inode的字节数记录在`i_extra_isize`字段中，这允许`struct ext4_inode`在不必升级所有磁盘上inode的情况下为新内核而增长。对`EXT2_GOOD_OLD_INODE_SIZE`之外的字段的访问应该验证是否在`i_extra_isize`内。**默认情况下，ext4 inode记录为256字节**，且（截至2019年8月）inode结构为160字节（`i_extra_isize = 32`）。inode结构末尾和inode记录末尾之间的额外空间可用于存储扩展属性。每个inode记录可以与文件系统块大小一样大，尽管这并不是特别高效。
+
+### 4.1.2. 查找Inode
+
+每个块组包含`sb->s_inodes_per_group`个inode。因为inode 0被定义为不存在，所以可以使用这个公式来查找inode所在的块组：`bg = (inode_num - 1) / sb->s_inodes_per_group`。特定的inode可以在块组的inode表中的`index = (inode_num - 1) % sb->s_inodes_per_group`处找到。要获取inode表中的字节地址，使用`offset = index * sb->s_inode_size`。
+
+### 4.1.3.  Inode时间戳
+
+在inode结构的低128字节中记录了四个时间戳——inode更改时间（`ctime`）、访问时间（`atime`）、数据修改时间（`mtime`）和删除时间（`dtime`）。这四个字段是32位有符号整数，表示自Unix纪元（1970-01-01 00:00:00 GMT）以来的秒数，这意味着这些字段将在2038年1月溢出。如果文件系统没有`orphan_file`特性，不再从任何目录链接但仍然打开的inode（孤儿inode），`dtime`字段被重载用于孤儿列表。超级块字段`s_last_orphan`指向孤儿列表中的第一个inode；`dtime`是下一个孤立inode的编号，如果没有更多孤儿，则为零。
+
+> dtime的特殊用途
+>
+> 当文件系统没有启用orphan_file特性时，dtime字段会被重新用于另一个目的：
+> 
+> + 当一个文件被删除但仍然被某个进程打开时（称为"孤儿inode"）
+> + 超级块的s_last_orphan字段指向孤儿链表的第一个inode
+> + 每个孤儿inode的dtime字段存储下一个孤儿inode的编号
+> + 链表末尾的inode的dtime值为0
 
-Description
+如果inode结构大小`sb->s_inode_size`大于128字节，且i_inode_extra字段足够大以包含相应的`i_[cma]time_extra`字段，则ctime、atime和mtime inode字段被扩展为64位。在这个"额外"的32位字段中，低两位用于将32位秒字段扩展为34位宽；高30位用于提供纳秒级时间戳精度。因此，时间戳应该直到2446年5月才会溢出。dtime未被扩展。还有第五个时间戳记录inode创建时间（crtime）；该字段为64位宽，解码方式与64位[cma]time相同。crtime和dtime都不能通过常规stat()接口访问，尽管debugfs会报告它们。
 
-0x0
+我们使用32位有符号时间值加上（2^32 *（额外纪元位））。换句话说：
 
-__le16
+| 额外纪元位 | 32位时间的MSB | 从有符号32位到64位tv_sec的调整 | 解码后的64位tv_sec | 有效时间范围 |
+| ------- | ------ | ------- | ------- | -------|
+| 0 0 | 1 | 0 | -0x80000000 - -0x00000001 | 1901-12-13到1969-12-31 | 
+| 0 0 | 0 | 0 | 0x000000000 - 0x07fffffff | 1970-01-01到2038-01-19 | 
+| 0 1 | 1 | 0x100000000 | 0x080000000 - 0x0ffffffff | 2038-01-19到2106-02-07 |
+| 0 1 | 0 | 0x100000000 | 0x100000000 - 0x17fffffff | 2106-02-07到2174-02-25 |
+| 1 0 | 1 | 0x200000000 | 0x180000000 - 0x1ffffffff | 2174-02-25到2242-03-16 |
+| 1 0 | 0 | 0x200000000 | 0x200000000 - 0x27fffffff | 2242-03-16到2310-04-04 |
+| 1 1 | 1 | 0x300000000 | 0x280000000 - 0x2ffffffff | 2310-04-04到2378-04-22 | 
+| 1 1 | 0 | 0x300000000 | 0x300000000 - 0x37fffffff | 2378-04-22到2446-05-10 |
 
-h_i_reserved1
+这是一种有点奇怪的编码，因为有效正值的数量是负值的七倍。在解码和编码2038年之后的日期方面也存在长期的错误，直到内核3.12和e2fsprogs 1.42.8似乎还没有修复。64位内核错误地将额外纪元位1,1用于1901年到1970年之间的日期。在某个时候，内核将被修复，e2fsck将修复这种情况，假设它在2310年之前运行。
 
-??
+## 4.2. inode.i_block的内容
+
+根据inode描述的文件类型，`inode.i_block`中的60字节存储可以以不同方式使用。通常，常规文件和目录将使用它来存储文件块索引信息，而特殊文件将将其用于特殊目的。
+
+### 4.2.1. 符号链接
+
+如果目标字符串长度小于60字节，符号链接的目标将存储在此字段中。否则，将使用区段或块映射来分配数据块来存储链接目标。
 
-0x2
+### 4.2.2. 直接/间接块寻址
 
-__u16
+在ext2/3中，文件块号通过（最多）三级1-1块映射映射到逻辑块号。要找到存储特定文件块的逻辑块，代码将通过这个越来越复杂的结构导航。请注意，既没有魔术数字也没有校验和来提供任何级别的信心，确保块不是充满垃圾。
 
-m_i_file_acl_high
+| i.i_block偏移量 | 指向何处 |
+| ------------- | -------- |
+| 0到11 | 直接映射到文件块0到11。|
+| 12 | 间接块：（文件块12到（$block_size / 4）+ 11，或者如果是4KiB块，则为12到1035）|
 
-Upper 16-bits of the extended attribute block (historically, the file ACL location).
+| 间接块偏移量 | 指向何处 |
+| ----------- | ------- |
+| 0到（$block_size / 4）| 直接映射到（$block_size / 4）个块（如果是4KiB块，则为1024）|
+| 13 | 双重间接块：（文件块$block_size/4 + 12到（$block_size / 4）^ 2 +（$block_size / 4）+ 11，或者如果是4KiB块，则为1036到1049611）|
 
-0x4
+| 双重间接块偏移量 | 指向何处 |
+| ----------- | ------- |
+| 0到（$block_size / 4）| 映射到（$block_size / 4）个间接块（如果是4KiB块，则为1024）|
 
-__u32
+| 间接块偏移量 | 指向何处 |
+| ----------- | ------- |
+| 0到（$block_size / 4） | 直接映射到（$block_size / 4）个块（如果是4KiB块，则为1024）|
+| 14 | 三重间接块：（文件块（$block_size / 4）^ 2 +（$block_size / 4）+ 12到（$block_size / 4）^ 3 +（$block_size / 4）^ 2 +（$block_size / 4）+ 12，或者如果是4KiB块，则为1049612到1074791436）|
 
-m_i_reserved2[2]
+| 三重间接块偏移量 | 指向何处 |
+| ----------- | ------- |
+| 0到（$block_size / 4）| 映射到（$block_size / 4）个双重间接块（如果是4KiB块，则为1024）|
 
-??
+| 双重间接块偏移量 | 指向何处 |
+| ----------- | ------- |
+| 0到（$block_size / 4）| 映射到（$block_size / 4）个间接块（如果是4KiB块，则为1024）|
 
-4.1.1. Inode Size
-In ext2 and ext3, the inode structure size was fixed at 128 bytes (EXT2_GOOD_OLD_INODE_SIZE) and each inode had a disk record size of 128 bytes. Starting with ext4, it is possible to allocate a larger on-disk inode at format time for all inodes in the filesystem to provide space beyond the end of the original ext2 inode. The on-disk inode record size is recorded in the superblock as s_inode_size. The number of bytes actually used by struct ext4_inode beyond the original 128-byte ext2 inode is recorded in the i_extra_isize field for each inode, which allows struct ext4_inode to grow for a new kernel without having to upgrade all of the on-disk inodes. Access to fields beyond EXT2_GOOD_OLD_INODE_SIZE should be verified to be within i_extra_isize. By default, ext4 inode records are 256 bytes, and (as of August 2019) the inode structure is 160 bytes (i_extra_isize = 32). The extra space between the end of the inode structure and the end of the inode record can be used to store extended attributes. Each inode record can be as large as the filesystem block size, though this is not terribly efficient.
+| 间接块偏移量 | 指向何处 |
+| ----------- | ------- |
+| 0到（$block_size / 4）| 直接映射到（$block_size / 4）个块（如果是4KiB块，则为1024）|
 
-4.1.2. Finding an Inode
-Each block group contains sb->s_inodes_per_group inodes. Because inode 0 is defined not to exist, this formula can be used to find the block group that an inode lives in: bg = (inode_num - 1) / sb->s_inodes_per_group. The particular inode can be found within the block group’s inode table at index = (inode_num - 1) % sb->s_inodes_per_group. To get the byte address within the inode table, use offset = index * sb->s_inode_size.
+请注意，使用这种块映射方案，即使对于大型连续文件，也需要填写大量映射数据！这种低效导致了区段映射方案的创建，下面将讨论。
 
-4.1.3. Inode Timestamps
-Four timestamps are recorded in the lower 128 bytes of the inode structure -- inode change time (ctime), access time (atime), data modification time (mtime), and deletion time (dtime). The four fields are 32-bit signed integers that represent seconds since the Unix epoch (1970-01-01 00:00:00 GMT), which means that the fields will overflow in January 2038. If the filesystem does not have orphan_file feature, inodes that are not linked from any directory but are still open (orphan inodes) have the dtime field overloaded for use with the orphan list. The superblock field s_last_orphan points to the first inode in the orphan list; dtime is then the number of the next orphaned inode, or zero if there are no more orphans.
+还要注意，使用此映射方案的文件不能放置在高于2^32块的位置。
 
-If the inode structure size sb->s_inode_size is larger than 128 bytes and the i_inode_extra field is large enough to encompass the respective i_[cma]time_extra field, the ctime, atime, and mtime inode fields are widened to 64 bits. Within this “extra” 32-bit field, the lower two bits are used to extend the 32-bit seconds field to be 34 bit wide; the upper 30 bits are used to provide nanosecond timestamp accuracy. Therefore, timestamps should not overflow until May 2446. dtime was not widened. There is also a fifth timestamp to record inode creation time (crtime); this field is 64-bits wide and decoded in the same manner as 64-bit [cma]time. Neither crtime nor dtime are accessible through the regular stat() interface, though debugfs will report them.
+> 每个文件的inode包含一个i_block数组，用于映射文件的数据块：
+> 
+> 直接块 (0-11)
+> 
+> + 最简单的映射，inode直接存储这些块的地址
+> + 对于小文件(≤12块)非常高效
+> 
+> 间接块 (偏移量12)
+> 
+> + 指向一个块，该块包含更多块地址
+> + 如果块大小为4KiB，可以映射额外的1024个块(12-1035)
+> 
+> 双重间接块 (偏移量13)
+> 
+> + 指向一个块，该块指向多个间接块
+> + 每个间接块再指向多个数据块
+> + 4KiB块大小时，可映射约1048576个块(1036-1049611)
+> 
+> 三重间接块 (偏移量14)
+> 
+> + 三层映射结构
+> + 4KiB块大小时，可映射超过10亿个块(1049612-1074791436)
+
+### 4.2.3. 区段树
+
+在ext4中，文件到逻辑块映射已被区段树替代。在旧方案下，分配1,000个连续的块需要间接块来映射所有1,000个条目；使用区段，映射减少到具有ee_len = 1000的单个struct ext4_extent。如果启用了flex_bg，可以使用单个区段分配非常大的文件，这在元数据块使用方面有相当大的减少，并且在磁盘效率方面有一些改进。inode必须设置区段标志（0x80000）才能使用此功能。
+
+区段被组织为树。树的每个节点都以`struct ext4_extent_header`开始。如果节点是内部节点（eh.eh_depth > 0），头部后面跟着eh.eh_entries个`struct ext4_extent_idx`实例；这些索引条目中的每一个都指向包含区段树中更多节点的块。如果节点是叶节点（eh.eh_depth == 0），则头部后面跟着`eh.eh_entries`个`struct ext4_extent`实例；这些实例指向文件的数据块。区段树的根节点存储在`inode.i_block`中，这允许在不使用额外元数据块的情况下记录前四个区段。
 
-We use the 32-bit signed time value plus (2^32 * (extra epoch bits)). In other words:
+区段树头记录在`struct ext4_extent_header`中，长度为12字节：
 
-Extra epoch bits
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __le16 | eh_magic | 魔术数字，0xF30A。|
+| 0x2 | __le16 | eh_entries | 头部后面有效条目的数量。|
+| 0x4 | __le16 | eh_max | 可以跟在头部后面的最大条目数。|
+| 0x6 | __le16 | eh_depth | 此区段节点在区段树中的深度。0 = 此区段节点指向数据块；否则，此区段节点指向其他区段节点。区段树最多可以有5级深：逻辑块号最多为2^32，满足4*(((blocksize - 12)/12)^n) >= 2^32的最小n是5。|
+| 0x8 | __le32 | eh_generation | 树的生成号。（被Lustre使用，但不是标准ext4）。|
 
-MSB of 32-bit time
+区段树的内部节点，也称为索引节点，记录为`struct ext4_extent_idx`，长度为12字节：
 
-Adjustment for signed 32-bit to 64-bit tv_sec
-
-Decoded 64-bit tv_sec
-
-valid time range
-
-0 0
-
-1
-
-0
-
--0x80000000 - -0x00000001
-
-1901-12-13 to 1969-12-31
-
-0 0
-
-0
-
-0
-
-0x000000000 - 0x07fffffff
-
-1970-01-01 to 2038-01-19
-
-0 1
-
-1
-
-0x100000000
-
-0x080000000 - 0x0ffffffff
-
-2038-01-19 to 2106-02-07
-
-0 1
-
-0
-
-0x100000000
-
-0x100000000 - 0x17fffffff
-
-2106-02-07 to 2174-02-25
-
-1 0
-
-1
-
-0x200000000
-
-0x180000000 - 0x1ffffffff
-
-2174-02-25 to 2242-03-16
-
-1 0
-
-0
-
-0x200000000
-
-0x200000000 - 0x27fffffff
-
-2242-03-16 to 2310-04-04
-
-1 1
-
-1
-
-0x300000000
-
-0x280000000 - 0x2ffffffff
-
-2310-04-04 to 2378-04-22
-
-1 1
-
-0
-
-0x300000000
-
-0x300000000 - 0x37fffffff
-
-2378-04-22 to 2446-05-10
-
-This is a somewhat odd encoding since there are effectively seven times as many positive values as negative values. There have also been long-standing bugs decoding and encoding dates beyond 2038, which don’t seem to be fixed as of kernel 3.12 and e2fsprogs 1.42.8. 64-bit kernels incorrectly use the extra epoch bits 1,1 for dates between 1901 and 1970. At some point the kernel will be fixed and e2fsck will fix this situation, assuming that it is run before 2310.
-
-4.2. The Contents of inode.i_block
-Depending on the type of file an inode describes, the 60 bytes of storage in inode.i_block can be used in different ways. In general, regular files and directories will use it for file block indexing information, and special files will use it for special purposes.
-
-4.2.1. Symbolic Links
-The target of a symbolic link will be stored in this field if the target string is less than 60 bytes long. Otherwise, either extents or block maps will be used to allocate data blocks to store the link target.
-
-4.2.2. Direct/Indirect Block Addressing
-In ext2/3, file block numbers were mapped to logical block numbers by means of an (up to) three level 1-1 block map. To find the logical block that stores a particular file block, the code would navigate through this increasingly complicated structure. Notice that there is neither a magic number nor a checksum to provide any level of confidence that the block isn’t full of garbage.
-
-i.i_block Offset
-
-Where It Points
-
-0 to 11
-
-Direct map to file blocks 0 to 11.
-
-12
-
-Indirect block: (file blocks 12 to ($block_size / 4) + 11, or 12 to 1035 if 4KiB blocks)
-
-Indirect Block Offset
-
-Where It Points
-
-0 to ($block_size / 4)
-
-Direct map to ($block_size / 4) blocks (1024 if 4KiB blocks)
-
-13
-
-Double-indirect block: (file blocks $block_size/4 + 12 to ($block_size / 4) ^ 2 + ($block_size / 4) + 11, or 1036 to 1049611 if 4KiB blocks)
-
-Double Indirect Block Offset
-
-Where It Points
-
-0 to ($block_size / 4)
-
-Map to ($block_size / 4) indirect blocks (1024 if 4KiB blocks)
-
-Indirect Block Offset
-
-Where It Points
-
-0 to ($block_size / 4)
-
-Direct map to ($block_size / 4) blocks (1024 if 4KiB blocks)
-
-14
-
-Triple-indirect block: (file blocks ($block_size / 4) ^ 2 + ($block_size / 4) + 12 to ($block_size / 4) ^ 3 + ($block_size / 4) ^ 2 + ($block_size / 4) + 12, or 1049612 to 1074791436 if 4KiB blocks)
-
-Triple Indirect Block Offset
-
-Where It Points
-
-0 to ($block_size / 4)
-
-Map to ($block_size / 4) double indirect blocks (1024 if 4KiB blocks)
-
-Double Indirect Block Offset
-
-Where It Points
-
-0 to ($block_size / 4)
-
-Map to ($block_size / 4) indirect blocks (1024 if 4KiB blocks)
-
-Indirect Block Offset
-
-Where It Points
-
-0 to ($block_size / 4)
-
-Direct map to ($block_size / 4) blocks (1024 if 4KiB blocks)
-
-Note that with this block mapping scheme, it is necessary to fill out a lot of mapping data even for a large contiguous file! This inefficiency led to the creation of the extent mapping scheme, discussed below.
-
-Notice also that a file using this mapping scheme cannot be placed higher than 2^32 blocks.
-
-4.2.3. Extent Tree
-In ext4, the file to logical block map has been replaced with an extent tree. Under the old scheme, allocating a contiguous run of 1,000 blocks requires an indirect block to map all 1,000 entries; with extents, the mapping is reduced to a single struct ext4_extent with ee_len = 1000. If flex_bg is enabled, it is possible to allocate very large files with a single extent, at a considerable reduction in metadata block use, and some improvement in disk efficiency. The inode must have the extents flag (0x80000) flag set for this feature to be in use.
-
-Extents are arranged as a tree. Each node of the tree begins with a struct ext4_extent_header. If the node is an interior node (eh.eh_depth > 0), the header is followed by eh.eh_entries instances of struct ext4_extent_idx; each of these index entries points to a block containing more nodes in the extent tree. If the node is a leaf node (eh.eh_depth == 0), then the header is followed by eh.eh_entries instances of struct ext4_extent; these instances point to the file’s data blocks. The root node of the extent tree is stored in inode.i_block, which allows for the first four extents to be recorded without the use of extra metadata blocks.
-
-The extent tree header is recorded in struct ext4_extent_header, which is 12 bytes long:
-
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le16
-
-eh_magic
-
-Magic number, 0xF30A.
-
-0x2
-
-__le16
-
-eh_entries
-
-Number of valid entries following the header.
-
-0x4
-
-__le16
-
-eh_max
-
-Maximum number of entries that could follow the header.
-
-0x6
-
-__le16
-
-eh_depth
-
-Depth of this extent node in the extent tree. 0 = this extent node points to data blocks; otherwise, this extent node points to other extent nodes. The extent tree can be at most 5 levels deep: a logical block number can be at most 2^32, and the smallest n that satisfies 4*(((blocksize - 12)/12)^n) >= 2^32 is 5.
-
-0x8
-
-__le32
-
-eh_generation
-
-Generation of the tree. (Used by Lustre, but not standard ext4).
-
-Internal nodes of the extent tree, also known as index nodes, are recorded as struct ext4_extent_idx, and are 12 bytes long:
-
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-ei_block
-
-This index node covers file blocks from ‘block’ onward.
-
-0x4
-
-__le32
-
-ei_leaf_lo
-
-Lower 32-bits of the block number of the extent node that is the next level lower in the tree. The tree node pointed to can be either another internal node or a leaf node, described below.
-
-0x8
-
-__le16
-
-ei_leaf_hi
-
-Upper 16-bits of the previous field.
-
-0xA
-
-__u16
-
-ei_unused
-
-Leaf nodes of the extent tree are recorded as struct ext4_extent, and are also 12 bytes long:
-
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-ee_block
-
-First file block number that this extent covers.
-
-0x4
-
-__le16
-
-ee_len
-
-Number of blocks covered by extent. If the value of this field is <= 32768, the extent is initialized. If the value of the field is > 32768, the extent is uninitialized and the actual extent length is ee_len - 32768. Therefore, the maximum length of a initialized extent is 32768 blocks, and the maximum length of an uninitialized extent is 32767.
-
-0x6
-
-__le16
-
-ee_start_hi
-
-Upper 16-bits of the block number to which this extent points.
-
-0x8
-
-__le32
-
-ee_start_lo
-
-Lower 32-bits of the block number to which this extent points.
-
-Prior to the introduction of metadata checksums, the extent header + extent entries always left at least 4 bytes of unallocated space at the end of each extent tree data block (because (2^x % 12) >= 4). Therefore, the 32-bit checksum is inserted into this space. The 4 extents in the inode do not need checksumming, since the inode is already checksummed. The checksum is calculated against the FS UUID, the inode number, the inode generation, and the entire extent block leading up to (but not including) the checksum itself.
-
-struct ext4_extent_tail is 4 bytes long:
-
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-eb_checksum
-
-Checksum of the extent block, crc32c(uuid+inum+igeneration+extentblock)
-
-4.2.4. Inline Data
-If the inline data feature is enabled for the filesystem and the flag is set for the inode, it is possible that the first 60 bytes of the file data are stored here.
-
-4.3. Directory Entries
-In an ext4 filesystem, a directory is more or less a flat file that maps an arbitrary byte string (usually ASCII) to an inode number on the filesystem. There can be many directory entries across the filesystem that reference the same inode number--these are known as hard links, and that is why hard links cannot reference files on other filesystems. As such, directory entries are found by reading the data block(s) associated with a directory file for the particular directory entry that is desired.
-
-4.3.1. Linear (Classic) Directories
-By default, each directory lists its entries in an “almost-linear” array. I write “almost” because it’s not a linear array in the memory sense because directory entries are not split across filesystem blocks. Therefore, it is more accurate to say that a directory is a series of data blocks and that each block contains a linear array of directory entries. The end of each per-block array is signified by reaching the end of the block; the last entry in the block has a record length that takes it all the way to the end of the block. The end of the entire directory is of course signified by reaching the end of the file. Unused directory entries are signified by inode = 0. By default the filesystem uses struct ext4_dir_entry_2 for directory entries unless the “filetype” feature flag is not set, in which case it uses struct ext4_dir_entry.
-
-The original directory entry format is struct ext4_dir_entry, which is at most 263 bytes long, though on disk you’ll need to reference dirent.rec_len to know for sure.
-
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-inode
-
-Number of the inode that this directory entry points to.
-
-0x4
-
-__le16
-
-rec_len
-
-Length of this directory entry. Must be a multiple of 4.
-
-0x6
-
-__le16
-
-name_len
-
-Length of the file name.
-
-0x8
-
-char
-
-name[EXT4_NAME_LEN]
-
-File name.
-
-Since file names cannot be longer than 255 bytes, the new directory entry format shortens the name_len field and uses the space for a file type flag, probably to avoid having to load every inode during directory tree traversal. This format is ext4_dir_entry_2, which is at most 263 bytes long, though on disk you’ll need to reference dirent.rec_len to know for sure.
-
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-inode
-
-Number of the inode that this directory entry points to.
-
-0x4
-
-__le16
-
-rec_len
-
-Length of this directory entry.
-
-0x6
-
-__u8
-
-name_len
-
-Length of the file name.
-
-0x7
-
-__u8
-
-file_type
-
-File type code, see ftype table below.
-
-0x8
-
-char
-
-name[EXT4_NAME_LEN]
-
-File name.
-
-The directory file type is one of the following values:
-
-Value
-
-Description
-
-0x0
-
-Unknown.
-
-0x1
-
-Regular file.
-
-0x2
-
-Directory.
-
-0x3
-
-Character device file.
-
-0x4
-
-Block device file.
-
-0x5
-
-FIFO.
-
-0x6
-
-Socket.
-
-0x7
-
-Symbolic link.
-
-To support directories that are both encrypted and casefolded directories, we must also include hash information in the directory entry. We append ext4_extended_dir_entry_2 to ext4_dir_entry_2 except for the entries for dot and dotdot, which are kept the same. The structure follows immediately after name and is included in the size listed by rec_len If a directory entry uses this extension, it may be up to 271 bytes.
-
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-hash
-
-The hash of the directory name
-
-0x4
-
-__le32
-
-minor_hash
-
-The minor hash of the directory name
-
-In order to add checksums to these classic directory blocks, a phony struct ext4_dir_entry is placed at the end of each leaf block to hold the checksum. The directory entry is 12 bytes long. The inode number and name_len fields are set to zero to fool old software into ignoring an apparently empty directory entry, and the checksum is stored in the place where the name normally goes. The structure is struct ext4_dir_entry_tail:
-
-Offset
-
-Size
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-det_reserved_zero1
-
-Inode number, which must be zero.
-
-0x4
-
-__le16
-
-det_rec_len
-
-Length of this directory entry, which must be 12.
-
-0x6
-
-__u8
-
-det_reserved_zero2
-
-Length of the file name, which must be zero.
-
-0x7
-
-__u8
-
-det_reserved_ft
-
-File type, which must be 0xDE.
-
-0x8
-
-__le32
-
-det_checksum
-
-Directory leaf block checksum.
-
-The leaf directory block checksum is calculated against the FS UUID, the directory’s inode number, the directory’s inode generation number, and the entire directory entry block up to (but not including) the fake directory entry.
-
-4.3.2. Hash Tree Directories
-A linear array of directory entries isn’t great for performance, so a new feature was added to ext3 to provide a faster (but peculiar) balanced tree keyed off a hash of the directory entry name. If the EXT4_INDEX_FL (0x1000) flag is set in the inode, this directory uses a hashed btree (htree) to organize and find directory entries. For backwards read-only compatibility with ext2, this tree is actually hidden inside the directory file, masquerading as “empty” directory data blocks! It was stated previously that the end of the linear directory entry table was signified with an entry pointing to inode 0; this is (ab)used to fool the old linear-scan algorithm into thinking that the rest of the directory block is empty so that it moves on.
-
-The root of the tree always lives in the first data block of the directory. By ext2 custom, the ‘.’ and ‘..’ entries must appear at the beginning of this first block, so they are put here as two struct ext4_dir_entry_2 s and not stored in the tree. The rest of the root node contains metadata about the tree and finally a hash->block map to find nodes that are lower in the htree. If dx_root.info.indirect_levels is non-zero then the htree has two levels; the data block pointed to by the root node’s map is an interior node, which is indexed by a minor hash. Interior nodes in this tree contains a zeroed out struct ext4_dir_entry_2 followed by a minor_hash->block map to find leafe nodes. Leaf nodes contain a linear array of all struct ext4_dir_entry_2; all of these entries (presumably) hash to the same value. If there is an overflow, the entries simply overflow into the next leaf node, and the least-significant bit of the hash (in the interior node map) that gets us to this next leaf node is set.
-
-To traverse the directory as a htree, the code calculates the hash of the desired file name and uses it to find the corresponding block number. If the tree is flat, the block is a linear array of directory entries that can be searched; otherwise, the minor hash of the file name is computed and used against this second block to find the corresponding third block number. That third block number will be a linear array of directory entries.
-
-To traverse the directory as a linear array (such as the old code does), the code simply reads every data block in the directory. The blocks used for the htree will appear to have no entries (aside from ‘.’ and ‘..’) and so only the leaf nodes will appear to have any interesting content.
-
-The root of the htree is in struct dx_root, which is the full length of a data block:
-
-Offset
-
-Type
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-dot.inode
-
-inode number of this directory.
-
-0x4
-
-__le16
-
-dot.rec_len
-
-Length of this record, 12.
-
-0x6
-
-u8
-
-dot.name_len
-
-Length of the name, 1.
-
-0x7
-
-u8
-
-dot.file_type
-
-File type of this entry, 0x2 (directory) (if the feature flag is set).
-
-0x8
-
-char
-
-dot.name[4]
-
-“.000”
-
-0xC
-
-__le32
-
-dotdot.inode
-
-inode number of parent directory.
-
-0x10
-
-__le16
-
-dotdot.rec_len
-
-block_size - 12. The record length is long enough to cover all htree data.
-
-0x12
-
-u8
-
-dotdot.name_len
-
-Length of the name, 2.
-
-0x13
-
-u8
-
-dotdot.file_type
-
-File type of this entry, 0x2 (directory) (if the feature flag is set).
-
-0x14
-
-char
-
-dotdot_name[4]
-
-“..00”
-
-0x18
-
-__le32
-
-struct dx_root_info.reserved_zero
-
-Zero.
-
-0x1C
-
-u8
-
-struct dx_root_info.hash_version
-
-Hash type, see dirhash table below.
-
-0x1D
-
-u8
-
-struct dx_root_info.info_length
-
-Length of the tree information, 0x8.
-
-0x1E
-
-u8
-
-struct dx_root_info.indirect_levels
-
-Depth of the htree. Cannot be larger than 3 if the INCOMPAT_LARGEDIR feature is set; cannot be larger than 2 otherwise.
-
-0x1F
-
-u8
-
-struct dx_root_info.unused_flags
-
-0x20
-
-__le16
-
-limit
-
-Maximum number of dx_entries that can follow this header, plus 1 for the header itself.
-
-0x22
-
-__le16
-
-count
-
-Actual number of dx_entries that follow this header, plus 1 for the header itself.
-
-0x24
-
-__le32
-
-block
-
-The block number (within the directory file) that goes with hash=0.
-
-0x28
-
-struct dx_entry
-
-entries[0]
-
-As many 8-byte struct dx_entry as fits in the rest of the data block.
-
-The directory hash is one of the following values:
-
-Value
-
-Description
-
-0x0
-
-Legacy.
-
-0x1
-
-Half MD4.
-
-0x2
-
-Tea.
-
-0x3
-
-Legacy, unsigned.
-
-0x4
-
-Half MD4, unsigned.
-
-0x5
-
-Tea, unsigned.
-
-0x6
-
-Siphash.
-
-Interior nodes of an htree are recorded as struct dx_node, which is also the full length of a data block:
-
-Offset
-
-Type
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-fake.inode
-
-Zero, to make it look like this entry is not in use.
-
-0x4
-
-__le16
-
-fake.rec_len
-
-The size of the block, in order to hide all of the dx_node data.
-
-0x6
-
-u8
-
-name_len
-
-Zero. There is no name for this “unused” directory entry.
-
-0x7
-
-u8
-
-file_type
-
-Zero. There is no file type for this “unused” directory entry.
-
-0x8
-
-__le16
-
-limit
-
-Maximum number of dx_entries that can follow this header, plus 1 for the header itself.
-
-0xA
-
-__le16
-
-count
-
-Actual number of dx_entries that follow this header, plus 1 for the header itself.
-
-0xE
-
-__le32
-
-block
-
-The block number (within the directory file) that goes with the lowest hash value of this block. This value is stored in the parent block.
-
-0x12
-
-struct dx_entry
-
-entries[0]
-
-As many 8-byte struct dx_entry as fits in the rest of the data block.
-
-The hash maps that exist in both struct dx_root and struct dx_node are recorded as struct dx_entry, which is 8 bytes long:
-
-Offset
-
-Type
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-hash
-
-Hash code.
-
-0x4
-
-__le32
-
-block
-
-Block number (within the directory file, not filesystem blocks) of the next node in the htree.
-
-(If you think this is all quite clever and peculiar, so does the author.)
-
-If metadata checksums are enabled, the last 8 bytes of the directory block (precisely the length of one dx_entry) are used to store a struct dx_tail, which contains the checksum. The limit and count entries in the dx_root/dx_node structures are adjusted as necessary to fit the dx_tail into the block. If there is no space for the dx_tail, the user is notified to run e2fsck -D to rebuild the directory index (which will ensure that there’s space for the checksum. The dx_tail structure is 8 bytes long and looks like this:
-
-Offset
-
-Type
-
-Name
-
-Description
-
-0x0
-
-u32
-
-dt_reserved
-
-Zero.
-
-0x4
-
-__le32
-
-dt_checksum
-
-Checksum of the htree directory block.
-
-The checksum is calculated against the FS UUID, the htree index header (dx_root or dx_node), all of the htree indices (dx_entry) that are in use, and the tail block (dx_tail).
-
-4.4. Extended Attributes
-Extended attributes (xattrs) are typically stored in a separate data block on the disk and referenced from inodes via inode.i_file_acl*. The first use of extended attributes seems to have been for storing file ACLs and other security data (selinux). With the user_xattr mount option it is possible for users to store extended attributes so long as all attribute names begin with “user”; this restriction seems to have disappeared as of Linux 3.0.
-
-There are two places where extended attributes can be found. The first place is between the end of each inode entry and the beginning of the next inode entry. For example, if inode.i_extra_isize = 28 and sb.inode_size = 256, then there are 256 - (128 + 28) = 100 bytes available for in-inode extended attribute storage. The second place where extended attributes can be found is in the block pointed to by inode.i_file_acl. As of Linux 3.11, it is not possible for this block to contain a pointer to a second extended attribute block (or even the remaining blocks of a cluster). In theory it is possible for each attribute’s value to be stored in a separate data block, though as of Linux 3.11 the code does not permit this.
-
-Keys are generally assumed to be ASCIIZ strings, whereas values can be strings or binary data.
-
-Extended attributes, when stored after the inode, have a header ext4_xattr_ibody_header that is 4 bytes long:
-
-Offset
-
-Type
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-h_magic
-
-Magic number for identification, 0xEA020000. This value is set by the Linux driver, though e2fsprogs doesn’t seem to check it(?)
-
-The beginning of an extended attribute block is in struct ext4_xattr_header, which is 32 bytes long:
-
-Offset
-
-Type
-
-Name
-
-Description
-
-0x0
-
-__le32
-
-h_magic
-
-Magic number for identification, 0xEA020000.
-
-0x4
-
-__le32
-
-h_refcount
-
-Reference count.
-
-0x8
-
-__le32
-
-h_blocks
-
-Number of disk blocks used.
-
-0xC
-
-__le32
-
-h_hash
-
-Hash value of all attributes.
-
-0x10
-
-__le32
-
-h_checksum
-
-Checksum of the extended attribute block.
-
-0x14
-
-__u32
-
-h_reserved[3]
-
-Zero.
-
-The checksum is calculated against the FS UUID, the 64-bit block number of the extended attribute block, and the entire block (header + entries).
-
-Following the struct ext4_xattr_header or struct ext4_xattr_ibody_header is an array of struct ext4_xattr_entry; each of these entries is at least 16 bytes long. When stored in an external block, the struct ext4_xattr_entry entries must be stored in sorted order. The sort order is e_name_index, then e_name_len, and finally e_name. Attributes stored inside an inode do not need be stored in sorted order.
-
-Offset
-
-Type
-
-Name
-
-Description
-
-0x0
-
-__u8
-
-e_name_len
-
-Length of name.
-
-0x1
-
-__u8
-
-e_name_index
-
-Attribute name index. There is a discussion of this below.
-
-0x2
-
-__le16
-
-e_value_offs
-
-Location of this attribute’s value on the disk block where it is stored. Multiple attributes can share the same value. For an inode attribute this value is relative to the start of the first entry; for a block this value is relative to the start of the block (i.e. the header).
-
-0x4
-
-__le32
-
-e_value_inum
-
-The inode where the value is stored. Zero indicates the value is in the same block as this entry. This field is only used if the INCOMPAT_EA_INODE feature is enabled.
-
-0x8
-
-__le32
-
-e_value_size
-
-Length of attribute value.
-
-0xC
-
-__le32
-
-e_hash
-
-Hash value of attribute name and attribute value. The kernel doesn’t update the hash for in-inode attributes, so for that case this value must be zero, because e2fsck validates any non-zero hash regardless of where the xattr lives.
-
-0x10
-
-char
-
-e_name[e_name_len]
-
-Attribute name. Does not include trailing NULL.
-
-Attribute values can follow the end of the entry table. There appears to be a requirement that they be aligned to 4-byte boundaries. The values are stored starting at the end of the block and grow towards the xattr_header/xattr_entry table. When the two collide, the overflow is put into a separate disk block. If the disk block fills up, the filesystem returns -ENOSPC.
-
-The first four fields of the ext4_xattr_entry are set to zero to mark the end of the key list.
-
-4.4.1. Attribute Name Indices
-Logically speaking, extended attributes are a series of key=value pairs. The keys are assumed to be NULL-terminated strings. To reduce the amount of on-disk space that the keys consume, the beginning of the key string is matched against the attribute name index. If a match is found, the attribute name index field is set, and matching string is removed from the key name. Here is a map of name index values to key prefixes:
-
-Name Index
-
-Key Prefix
-
-0
-
-(no prefix)
-
-1
-
-“user.”
-
-2
-
-“system.posix_acl_access”
-
-3
-
-“system.posix_acl_default”
-
-4
-
-“trusted.”
-
-6
-
-“security.”
-
-7
-
-“system.” (inline_data only?)
-
-8
-
-“system.richacl” (SuSE kernels only?)
-
-For example, if the attribute key is “user.fubar”, the attribute name index is set to 1 and the “fubar” name is recorded on disk.
-
-4.4.2. POSIX ACLs
-POSIX ACLs are stored in a reduced version of the Linux kernel (and libacl’s) internal ACL format. The key difference is that the version number is different (1) and the e_id field is only stored for named user and group ACLs.
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __le32 | ei_block | 该索引节点覆盖从'block'开始的文件块。|
+| 0x4 | __le32 | ei_leaf_lo | 树中下一级区段节点的块号的低32位。所指向的树节点可以是另一个内部节点或叶节点，如下所述。|
+| 0x8 | __le16 | ei_leaf_hi | 前一个字段的高16位。|
+| 0xA | __u16 | ei_unused | |
+
+区段树的叶节点记录为struct ext4_extent，也是12字节长：
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __le32 | ee_block | 此区段覆盖的第一个文件块号。|
+| 0x4 | __le16 | ee_len | 区段覆盖的块数。如果此字段的值 <= 32768，则区段已初始化。如果字段值 > 32768，则区段未初始化，实际区段长度为ee_len - 32768。因此，初始化区段的最大长度为32768块，未初始化区段的最大长度为32767。|
+| 0x6 | __le16 | ee_start_hi | 此区段指向的块号的高16位。|
+| 0x8 | __le32 | ee_start_lo | 此区段指向的块号的低32位。|
+
+在引入元数据校验和之前，区段头+区段条目总是在每个区段树数据块的末尾留下至少4字节的未分配空间（因为(2^x % 12) >= 4）。因此，32位校验和被插入到这个空间中。inode中的4个区段不需要校验和，因为inode已经进行了校验和。校验和是针对FS UUID、inode号、inode生成号和直到（但不包括）校验和本身的整个区段块计算的。
+
+struct ext4_extent_tail长4字节：
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __le32 | eb_checksum | 区段块的校验和，crc32c(uuid+inum+igeneration+extentblock)|
+
+### 4.2.4. 内联数据
+
+如果为文件系统启用了内联数据功能并为inode设置了标志，则文件数据的前60个字节可能存储在此处。
+
+## 4.3. 目录条目
+
+在ext4文件系统中，目录或多或少是一个扁平文件，它将任意字节字符串（通常是ASCII）映射到文件系统上的inode号。整个文件系统中可以有许多引用相同inode号的目录条目——这些被称为硬链接，这就是为什么硬链接不能引用其他文件系统上的文件。因此，通过读取与目录文件相关联的数据块来查找所需的特定目录条目。
+
+### 4.3.1.  线性（经典）目录
+
+默认情况下，每个目录在"几乎线性"的数组中列出其条目。我写"几乎"是因为它在内存意义上不是线性数组，因为目录条目不会跨文件系统块分割。因此，更准确地说，目录是一系列数据块，每个块包含目录条目的线性数组。每个块内数组的结束由到达块的末尾表示；块中的最后一个条目的记录长度一直延伸到块的末尾。整个目录的结束当然由到达文件的末尾表示。未使用的目录条目由inode = 0表示。默认情况下，文件系统使用`struct ext4_dir_entry_2`作为目录条目，除非未设置"filetype"特性标志，在这种情况下使用`struct ext4_dir_entry`。
+
+原始目录条目格式是struct ext4_dir_entry，最长263字节，尽管在磁盘上您需要参考dirent.rec_len才能确定。
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __le32 | inode | 此目录条目指向的inode号。|
+| 0x4 | __le16 | rec_len | 此目录条目的长度。必须是4的倍数。|
+| 0x6 | __le16 | name_len | 文件名的长度。|
+| 0x8 | char | name\[EXT4_NAME_LEN\] | 文件名。|
+
+由于文件名不能长于255字节，新的目录条目格式缩短了name_len字段，并使用该空间用于文件类型标志，可能是为了避免在目录树遍历期间必须加载每个inode。这种格式是`ext4_dir_entry_2`，最长263字节，尽管在磁盘上您需要参考dirent.rec_len才能确定。
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __le32 | inode | 此目录条目指向的inode号。|
+| 0x4 | __le16 | rec_len | 此目录条目的长度。|
+| 0x6 | __u8 | name_len | 文件名的长度。|
+| 0x7 | __u8 | file_type | 文件类型代码，请参阅下面的ftype表。|
+| 0x8 | char | name\[EXT4_NAME_LEN\] | 文件名。|
+
+目录文件类型是以下值之一：
+
+| 值 | 描述 |
+| 0x0 | 未知。|
+| 0x1 | 常规文件。|
+| 0x2 | 目录。|
+| 0x3 | 字符设备文件。|
+| 0x4 | 块设备文件。|
+| 0x5 | FIFO。|
+|0x6 | Socket。|
+|0x7 | 符号链接。|
+
+为了支持既加密又区分大小写的目录，我们还必须在目录条目中包含哈希信息。我们将ext4_extended_dir_entry_2附加到ext4_dir_entry_2后面，dot和dotdot条目除外，它们保持不变。该结构紧跟在name之后，并包含在rec_len列出的大小中。如果目录条目使用此扩展，它最长可达271字节。
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __le32 | hash | 目录名的哈希| 
+| 0x4 | __le32 | minor_hash | 目录名的次要哈希|
+
+为了向这些经典目录块添加校验和，在每个叶块的末尾放置了一个伪struct ext4_dir_entry来保存校验和。目录条目长12字节。inode号和name_len字段设置为零，以欺骗旧软件忽略一个看似空的目录条目，校验和存储在通常放置名称的位置。该结构是struct ext4_dir_entry_tail：
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __le32 | det_reserved_zero1 | inode号，必须为零。|
+| 0x4 | __le16 | det_rec_len | 此目录条目的长度，必须为12。|
+| 0x6 | __u8 | det_reserved_zero2 | 文件名的长度，必须为零。|
+| 0x7 | __u8 | det_reserved_ft | 文件类型，必须为0xDE。|
+| 0x8 | __le32 | det_checksum | 目录叶块校验和。|
+
+叶目录块校验和是针对FS UUID、目录的inode号、目录的inode生成号和直到（但不包括）伪目录条目的整个目录条目块计算的。
+
+### 4.3.2. 哈希树目录
+
+目录条目的线性数组对性能不是很好，所以在ext3中添加了一个新功能，提供更快（但特殊）的平衡树，以目录条目名称的哈希为键。如果在inode中设置了EXT4_INDEX_FL (0x1000)标志，此目录使用哈希btree（htree）来组织和查找目录条目。为了向后只读兼容ext2，这棵树实际上隐藏在目录文件内，伪装成"空"目录数据块！之前曾说过，线性目录条目表的结束是由指向inode 0的条目表示的；这被（滥）用来欺骗旧的线性扫描算法，使其认为目录块的其余部分是空的，这样它就会继续前进。
+
+树的根总是位于目录的第一个数据块中。按照ext2的惯例，'.'和'..'条目必须出现在此第一个块的开头，所以它们作为两个struct ext4_dir_entry_2放在这里，而不是存储在树中。根节点的其余部分包含有关树的元数据，最后是一个hash->block映射，用于查找htree中较低的节点。如果dx_root.info.indirect_levels不为零，则htree有两个级别；由根节点映射指向的数据块是一个内部节点，由次要哈希索引。该树中的内部节点包含一个全零的struct ext4_dir_entry_2，后面跟着一个minor_hash->block映射，用于查找叶节点。叶节点包含所有struct ext4_dir_entry_2的线性数组；所有这些条目（可能）哈希到相同的值。如果有溢出，条目简单地溢出到下一个叶节点，并设置哈希（在内部节点映射中）的最低有效位，该位使我们到达这个下一个叶节点。
+
+要将目录作为htree遍历，代码计算所需文件名的哈希并用它来找到相应的块号。如果树是扁平的，该块是可以搜索的目录条目的线性数组；否则，计算文件名的次要哈希并用它对这第二个块进行处理，以找到相应的第三个块号。该第三个块号将是目录条目的线性数组。
+要将目录作为线性数组遍历（如旧代码那样），代码简单地读取目录中的每个数据块。用于htree的块将显示为没有条目（除了'.'和'..'），因此只有叶节点才会显示有任何有趣的内容。
+
+htree的根在struct dx_root中，它是数据块的完整长度：
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __le32 | dot.inode | 此目录的inode号。|
+| 0x4 | __le16 | dot.rec_len | 此记录的长度，12。|
+| 0x6 | u8 | dot.name_len | 名称的长度，1。|
+| 0x7 | u8 | dot.file_type | 此条目的文件类型，0x2（目录）（如果设置了特性标志）。|
+| 0x8 | char | dot.name[4] | ".000"
+| 0xC | __le32 | dotdot.inode | 父目录的inode号。|
+| 0x10 | __le16 | dotdot.rec_len | block_size - 12。记录长度足够长，覆盖所有htree数据。|
+| 0x12 | u8 | dotdot.name_len | 名称的长度，2。|
+| 0x13 | u8 | dotdot.file_type | 此条目的文件类型，0x2（目录）（如果设置了特性标志）。|
+| 0x14 | char | dotdot_name[4] | "..00"|
+| 0x18 | __le32 | struct dx_root_info.reserved_zero | 零。|
+| 0x1C | u8 | struct dx_root_info.hash_version | 哈希类型，请参阅下面的dirhash表。|
+| 0x1D | u8 | struct dx_root_info.info_length | 树信息的长度，0x8。|
+| 0x1E | u8 | struct dx_root_info.indirect_levels | htree的深度。如果设置了INCOMPAT_LARGEDIR特性，则不能大于3；否则不能大于2。|
+| 0x1F | u8 | struct dx_root_info.unused_flags| |
+| 0x20 | __le16 | limit | 可以跟随此头的dx_entries的最大数量，加上头本身的1。|
+| 0x22 | __le16 | count | 实际跟随此头的dx_entries的数量，加上头本身的1。|
+| 0x24 | __le32 | block | 与hash=0对应的块号（在目录文件内）。|
+| 0x28 | struct dx_entry | entries\[0\] | 尽可能多的8字节struct dx_entry，以适应数据块的其余部分。|
+
+目录哈希是以下值之一：
+
+| 值 | 描述 |
+| -- | -- |
+| 0x0 | 传统。|
+| 0x1 | 半MD4。|
+| 0x2 | Tea。|
+| 0x3 | 传统，无符号。|
+| 0x4 | 半MD4，无符号。|
+| 0x5 | Tea，无符号。|
+| 0x6 | Siphash。|
+
+htree的内部节点记录为struct dx_node，它也是数据块的完整长度：
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __le32 | fake.inode | 零，使其看起来像这个条目未使用。|
+| 0x4 | __le16 | fake.rec_len | 块的大小，为了隐藏所有dx_node数据。|
+| 0x6 | u8 | name_len | 零。这个"未使用"的目录条目没有名称。|
+| 0x7 | u8 | file_type | 零。这个"未使用"的目录条目没有文件类型。|
+| 0x8 | __le16 | limit | 可以跟随此头的dx_entries的最大数量，加上头本身的1。|
+| 0xA | __le16 | count | 实际跟随此头的dx_entries的数量，加上头本身的1。|
+| 0xE | __le32 | block | 与此块最低哈希值对应的块号（在目录文件内）。该值存储在父块中。|
+| 0x12 | struct dx_entry | entries[0] | 尽可能多的8字节struct dx_entry，以适应数据块的其余部分。
+
+存在于`struct dx_root`和`struct dx_node`中的哈希映射记录为`struct dx_entry`，长8字节：
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __le32 | hash | 哈希码。|
+| 0x4 | __le32 | block | htree中下一个节点的块号（在目录文件内，不是文件系统块）。|
+
+（如果你认为这一切都相当巧妙和特殊，作者也是这么认为的。）
+
+如果启用了元数据校验和，目录块的最后8字节（恰好是一个dx_entry的长度）用于存储struct dx_tail，其中包含校验和。dx_root/dx_node结构中的limit和count条目根据需要调整，以使dx_tail适合块中。如果没有dx_tail的空间，会通知用户运行e2fsck -D重建目录索引（这将确保有校验和的空间）。dx_tail结构长8字节，如下所示：
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | u32 | dt_reserved | 零。|
+| 0x4 | __le32 | dt_checksumhtree | 目录块的校验和。|
+
+校验和是针对FS UUID、htree索引头（dx_root或dx_node）、所有正在使用的htree索引（dx_entry）和尾块（dx_tail）计算的。
+
+## 4.4. 扩展属性
+
+扩展属性（xattrs）通常存储在磁盘上的单独数据块中，并通过inode.i_file_acl*从inode引用。扩展属性的首次使用似乎是为了存储文件ACL和其他安全数据（selinux）。使用user_xattr挂载选项，用户可以存储扩展属性，只要所有属性名都以"user"开头；这种限制似乎在Linux 3.0之后消失了。
+
+扩展属性可以在两个地方找到。第一个地方是每个inode条目的末尾和下一个inode条目的开始之间。例如，如果inode.i_extra_isize = 28且sb.inode_size = 256，则有256 - (128 + 28) = 100字节可用于inode内扩展属性存储。扩展属性可以找到的第二个地方是inode.i_file_acl指向的块中。截至Linux 3.11，此块不可能包含指向第二个扩展属性块（甚至集群的剩余块）的指针。理论上，每个属性的值可以存储在单独的数据块中，尽管截至Linux 3.11，代码不允许这样做。
+
+键通常被假定为ASCIIZ字符串，而值可以是字符串或二进制数据。
+
+当存储在inode之后时，扩展属性有一个头ext4_xattr_ibody_header，长4字节：
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+偏移量类型名称描述0x0__le32h_magic用于识别的魔术数字，0xEA020000。此值由Linux驱动程序设置，尽管e2fsprogs似乎不检查它(?)
+
+扩展属性块的开始在struct ext4_xattr_header中，长32字节：
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __le32 | h_magic | 用于识别的魔术数字，0xEA020000。|
+| 0x4 | __le32 | h_refcount | 引用计数。|
+| 0x8 | __le32 | h_blocks | 使用的磁盘块数。|
+| 0xC | __le32 | h_hash | 所有属性的哈希值。|
+| 0x10 | __le32 | h_checksum | 扩展属性块的校验和。|
+| 0x14 | __u32 | h_reserved\[3\] | 零。|
+
+校验和是针对FS UUID、扩展属性块的64位块号和整个块（头+条目）计算的。
+
+在struct ext4_xattr_header或struct ext4_xattr_ibody_header之后是struct ext4_xattr_entry的数组；这些条目中的每一个至少16字节长。当存储在外部块中时，struct ext4_xattr_entry条目必须按排序顺序存储。排序顺序是e_name_index，然后是e_name_len，最后是e_name。存储在inode内的属性不需要按排序顺序存储。
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ------ | ----- | ----- | ----- |
+| 0x0 | __u8 | e_name_len | 名称长度。|
+| 0x1 | __u8 | e_name_index | 属性名索引。下面有关于这个的讨论。|
+| 0x2 | __le16 | e_value_offs | 该属性的值在存储它的磁盘块上的位置。多个属性可以共享相同的值。对于inode属性，此值相对于第一个条目的开始；对于块，此值相对于块的开始（即头）。|
+| 0x4 | __le32 | e_value_inum | 存储值的inode。零表示值与此条目在同一块中。仅当启用INCOMPAT_EA_INODE特性时，才使用此字段。|
+| 0x8 | __le32 | e_value_size | 属性值的长度。|
+| 0xC | __le32 | e_hash | 属性名和属性值的哈希值。内核不更新inode内属性的哈希，所以对于这种情况，此值必须为零，因为e2fsck会验证任何非零哈希，无论xattr位于何处。|
+| 0x10 | char | e_name\[e_name_len\] | 属性名。不包括尾随NULL。|
+
+属性值可以跟在条目表的末尾。似乎有一个要求，它们必须对齐到4字节边界。值从块的末尾开始存储，并向xattr_header/xattr_entry表增长。当两者相撞时，溢出被放入单独的磁盘块中。如果磁盘块填满，文件系统返回-ENOSPC。
+
+ext4_xattr_entry的前四个字段设置为零以标记键列表的结束。
+
+### 4.4.1. 属性名索引
+
+从逻辑上讲，扩展属性是一系列键=值对。键被假定为NULL终止的字符串。为了减少键在磁盘上占用的空间，键字符串的开头与属性名索引匹配。如果找到匹配项，设置属性名索引字段，并从键名中删除匹配字符串。以下是名称索引值到键前缀的映射：
+
+| 名称索引 | 键前缀 |
+| ------- | ------ |
+| 0 |（无前缀）|
+| 1 | "user." |
+| 2 | "system.posix_acl_access" |
+| 3 | "system.posix_acl_default" |
+| 4 | "trusted." |
+| 6 | "security." |
+| 7 | "system."（仅inline_data？） |
+| 8 | "system.richacl"（仅SuSE内核？） |
+
+例如，如果属性键是"user.fubar"，则属性名索引设置为1，并在磁盘上记录"fubar"名称。
+
+### 4.4.2. POSIX ACLs
+
+POSIX ACL存储在Linux内核（和libacl的）内部ACL格式的简化版本中。关键区别是版本号不同（1），并且e_id字段仅为命名用户和组ACL存储。
