@@ -14,56 +14,56 @@ ext4超级块在`struct ext4_super_block`中的布局如下：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ---- | --- | ---- | --- |
-| 0x0 | `__le32` | `s_inodes_countinode` | 总数。| 
-| 0x4 | `__le32` | `s_blocks_count_lo` | 块总数。|
-| 0x8 | __le32 | `s_r_blocks_count_lo` | 这些块只能由超级用户分配。|
-| 0xC | __le32 | `s_free_blocks_count_lo` | 空闲块计数。|
-| 0x10 | __le32 | `s_free_inodes_count` | 空闲inode计数。|
-| 0x14 | __le32 | s_first_data_block | 第一个数据块。对于1k块文件系统，这必须至少为1，对于所有其他块大小，通常为0。|
-| 0x18 | __le32 | s_log_block_size | 块大小为`2 ^ (10 + s_log_block_size)`。|
-| 0x1C | __le32 | s_log_cluster_size | 如果启用了`bigalloc`，集群大小为`2 ^ (10 + s_log_cluster_size)`块。否则`s_log_cluster_size` | 必须等于s_log_block_size。|
-| 0x20 | __le32 | s_blocks_per_group | 每组块数。|
-| 0x24 | __le32 | s_clusters_per_group | 如果启用了`bigalloc`，则每组集群数。否则`s_clusters_per_group`必须等于`s_blocks_per_group`。|
-| 0x28 | __le32 | s_inodes_per_group | 每组inode数。0x2C__le32s_mtime挂载时间，从纪元开始的秒数。|
-| 0x30 | __le32 | s_wtime | 写入时间，从纪元开始的秒数。0x34__le16s_mnt_count自上次fsck以来的挂载次数。|
-| 0x36 | __le16 | s_max_mnt_count | 超过此挂载次数需要进行fsck。|
-| 0x38 | __le16 | s_magic | 魔术签名，0xEF53 |
-| 0x3A | __le16 | s_state | 文件系统状态。更多信息请参见`super_state`。|
-| 0x3C | __le16 | s_errors | 检测到错误时的行为。更多信息请参见super_errors。|
-| 0x3E | __le16 | s_minor_rev_level | 次要修订级别。|
-| 0x40 | __le32 | s_lastcheck | 上次检查时间，从纪元开始的秒数。|
-| 0x44 | __le32 | s_checkinterval | 检查之间的最大时间，以秒为单位。|
-| 0x48 | __le32 | s_creator_os | 创建操作系统。更多信息请参见super_creator表。|
-| 0x4C | __le32 | s_rev_level | 修订级别。更多信息请参见super_revision表。|
-| 0x50 | __le16 | s_def_resuid | 保留块的默认uid。0x52__le16s_def_resgid保留块的默认gid。|
+| `0x0` | `__le32` | `s_inodes_countinode` | 总数。| 
+| `0x4` | `__le32` | `s_blocks_count_lo` | 块总数。|
+| `0x8` | `__le32` | `s_r_blocks_count_lo` | 这些块只能由超级用户分配。|
+| `0xC` | `__le32` | `s_free_blocks_count_lo` | 空闲块计数。|
+| `0x10` | `__le32` | `s_free_inodes_count` | 空闲inode计数。|
+| `0x14` | `__le32` | `s_first_data_block` | 第一个数据块。对于1k块文件系统，这必须至少为1，对于所有其他块大小，通常为0。|
+| `0x18` | `__le32` | `s_log_block_size` | 块大小为`2 ^ (10 + s_log_block_size)`。|
+| `0x1C` | `__le32` | `s_log_cluster_size` | 如果启用了`bigalloc`，集群大小为`2 ^ (10 + s_log_cluster_size)`块。否则`s_log_cluster_size` | 必须等于s_log_block_size。|
+| `0x20` | `__le32` | `s_blocks_per_group` | 每组块数。|
+| `0x24` | `__le32` | `s_clusters_per_group` | 如果启用了`bigalloc`，则每组集群数。否则`s_clusters_per_group`必须等于`s_blocks_per_group`。|
+| `0x28` | `__le32` | `s_inodes_per_group` | 每组inode数。`0x2C__le32s_mtime`挂载时间，从纪元开始的秒数。|
+| `0x30` | `__le32` | `s_wtime` | 写入时间，从纪元开始的秒数。`0x34__le16s_mnt_count`自上次`fsck`以来的挂载次数。|
+| `0x36` | `__le16` | `s_max_mnt_count` | 超过此挂载次数需要进行fsck。|
+| `0x38` | `__le16` | `s_magic` | 魔术签名，0xEF53 |
+| `0x3A` | `__le16` | `s_state` | 文件系统状态。更多信息请参见`super_state`。|
+| `0x3C` | `__le16` | `s_errors` | 检测到错误时的行为。更多信息请参见`super_errors`。|
+| `0x3E` | `__le16` | `s_minor_rev_level` | 次要修订级别。|
+| `0x40` | `__le32` | `s_lastcheck` | 上次检查时间，从纪元开始的秒数。|
+| `0x44` | `__le32` | `s_checkinterval` | 检查之间的最大时间，以秒为单位。|
+| `0x48` | `__le32` | `s_creator_os` | 创建操作系统。更多信息请参见`super_creator`表。|
+| `0x4C` | `__le32` | `s_rev_level` | 修订级别。更多信息请参见`super_revision`表。|
+| `0x50` | `__le16` | `s_def_resuid` | 保留块的默认uid。`0x52__le16s_def_resgid`保留块的默认gid。|
 |      |      |  | 这些字段仅适用于`EXT4_DYNAMIC_REV`超级块。<br>注意：兼容功能集和不兼容功能集之间的区别在于，如果内核不知道不兼容功能集中设置的位，它应该拒绝挂载文件系统。<br>  注：当系统挂载一个ext文件系统时，它会检查超级块中的功能集标志。如果发现兼容功能集中有不认识的功能，系统会忽略这些功能，但仍然挂载文件系统；而如果发现不兼容功能集中有不认识的功能，系统会拒绝挂载。 <br>`e2fsck`的要求更严格；如果它不了解兼容或不兼容功能集中的功能，它必须中止，不要尝试干预它不理解的东西... <br>|
-| 0x54 | __le32 | `s_first_ino` | 第一个非保留inode。|
-| 0x58 | __le16 | `s_inode_size` | inode结构的大小，以字节为单位。|
-| 0x5A | __le16 | `s_block_group_nr` | 此超级块的块组#。|
-| 0x5C | `__le32` | `s_feature_compat` | 兼容功能集标志。即使内核不理解标志，它仍然可以读/写这个文件系统；fsck不应该这样做。更多信息请参见`super_compat`表。|
-| 0x60 | `__le32` | s_feature_incompat | 不兼容功能集。如果内核或fsck不理解这些位中的一个，它应该停止。更多信息请参见`super_incompat`表。|
-| 0x64 | `__le32` | s_feature_ro_compat | 只读兼容功能集。如果内核不理解这些位中的一个，它仍然可以以只读方式挂载。更多信息请参见super_rocompat表。|
-| 0x68 | `__u8` | s_uuid[16] | 卷的128位UUID。 |
-| 0x78 | `char` | s_volume_name[16] | 卷标。 |
-| 0x88 | `char` | s_last_mounted[64] | 文件系统上次挂载的目录。 |
-| 0xC8 | `__le32` | s_algorithm_usage_bitmap | 用于压缩（在`e2fsprogs/Linux`中未使用） |
+| `0x54` | `__le32` | `s_first_ino` | 第一个非保留inode。|
+| `0x58` | `__le16` | `s_inode_size` | inode结构的大小，以字节为单位。|
+| `0x5A` | `__le16` | `s_block_group_nr` | 此超级块的块组#。|
+| `0x5C` | `__le32` | `s_feature_compat` | 兼容功能集标志。即使内核不理解标志，它仍然可以读/写这个文件系统；fsck不应该这样做。更多信息请参见`super_compat`表。|
+| `0x60` | `__le32` | s_feature_incompat | 不兼容功能集。如果内核或fsck不理解这些位中的一个，它应该停止。更多信息请参见`super_incompat`表。|
+| `0x64` | `__le32` | s_feature_ro_compat | 只读兼容功能集。如果内核不理解这些位中的一个，它仍然可以以只读方式挂载。更多信息请参见`super_rocompat`表。|
+| `0x68` | `__u8` | s_uuid[16] | 卷的128位UUID。 |
+| `0x78` | `char` | s_volume_name[16] | 卷标。 |
+| `0x88` | `char` | s_last_mounted[64] | 文件系统上次挂载的目录。 |
+| `0xC8` | `__le32` | s_algorithm_usage_bitmap | 用于压缩（在`e2fsprogs/Linux`中未使用） |
 |  |  |  | 性能提示。目录预分配只有在`EXT4_FEATURE_COMPAT_DIR_PREALLOC`标志打开时才会发生。|
-| 0xCC | `__u8` | `s_prealloc_blocks` | 尝试为...文件预分配的块数？（在e2fsprogs/Linux中未使用） |
-| 0xCD |` __u8` | `s_prealloc_dir_blocks` | 为目录预分配的块数。（在e2fsprogs/Linux中未使用） |
-| 0xCE | `__le16` | `s_reserved_gdt_blocks` | 为未来文件系统扩展保留的GDT条目数。 |
+| `0xCC` | `__u8` | `s_prealloc_blocks` | 尝试为...文件预分配的块数？（在`e2fsprogs/Linux`中未使用） |
+| `0xCD` |` __u8` | `s_prealloc_dir_blocks` | 为目录预分配的块数。（在`e2fsprogs/Linux`中未使用） |
+| `0xCE` | `__le16` | `s_reserved_gdt_blocks` | 为未来文件系统扩展保留的GDT条目数。 |
 |  |  |  | 仅当设置了`EXT4_FEATURE_COMPAT_HAS_JOURNAL`时，日志支持才有效。|
-| 0xD0 | __u8 | s_journal_uuid[16] | 日志超级块的UUID |
-| 0xE0 | __le32 | s_journal_inum | 日志文件的inode号。 |
-| 0xE4 | __le32 | s_journal_dev | 如果设置了外部日志功能标志，则为日志文件的设备号。 |
-| 0xE8 | __le32 | s_last_orphan | 要删除的孤立inode列表的开始。 |
-| 0xEC | __le32 | s_hash_seed[4] | HTREE哈希种子。 |
-| 0xFC | __u8 | s_def_hash_version | 用于目录哈希的默认哈希算法。更多信息请参见super_def_hash。 |
-| 0xFD | __u8 | s_jnl_backup_type | 如果此值为0或EXT3_JNL_BACKUP_BLOCKS (1)，则s_jnl_blocks字段包含inode的i_block[]数组和i_size的副本。 |
-| 0xFE | __le16 | s_desc_size | 如果设置了64bit不兼容功能标志，则为组描述符的大小，以字节为单位。 |
-| 0x100 | __le32 | s_default_mount_opts | 默认挂载选项。更多信息请参见super_mountopts表。 |
-| 0x104 | __le32 | s_first_meta_bg | 如果启用了meta_bg功能，则为第一个元数据块组。 |
-| 0x108 | __le32 | s_mkfs_time | 文件系统创建时间，从纪元开始的秒数。 |
-| 0x10C | __le32 | s_jnl_blocks[17] | 日志inode的i_block[]数组的备份副本在前15个元素中，i_size_high和i_size分别在第16和第17个元素中。 |
+| `0xD0` | `__u8` | `s_journal_uuid[16]` | 日志超级块的UUID |
+| `0xE0` | `__le32` | `s_journal_inum` | 日志文件的inode号。 |
+| `0xE4` | `__le32` | `s_journal_dev` | 如果设置了外部日志功能标志，则为日志文件的设备号。 |
+| `0xE8` | `__le32` | `s_last_orphan` | 要删除的孤立inode列表的开始。 |
+| `0xEC` | `__le32` | `s_hash_seed[4]` | HTREE哈希种子。 |
+| `0xFC` | `__u8` | `s_def_hash_version` | 用于目录哈希的默认哈希算法。更多信息请参见`super_def_hash`。 |
+| `0xFD` | `__u8` | `s_jnl_backup_type` | 如果此值为0或`EXT3_JNL_BACKUP_BLOCKS` (1)，则`s_jnl_blocks`字段包含inode的`i_block[]`数组和`i_size`的副本。 |
+| `0xFE` | `__le16` | `s_desc_size` | 如果设置了64bit不兼容功能标志，则为组描述符的大小，以字节为单位。 |
+| `0x100` | `__le32` | `s_default_mount_opts` | 默认挂载选项。更多信息请参见`super_mountopts`表。 |
+| `0x104` | `__le32` | `s_first_meta_bg` | 如果启用了`meta_bg`功能，则为第一个元数据块组。 |
+| `0x108` | `__le32` | `s_mkfs_time` | 文件系统创建时间，从纪元开始的秒数。 |
+| `0x10C` | `__le32` | `s_jnl_blocks[17]` | 日志inode的`i_block[]`数组的备份副本在前15个元素中，`i_size_high`和`i_size`分别在第16和第17个元素中。 |
 |  |  |  |仅当设置了`EXT4_FEATURE_COMPAT_64BIT`时，64位支持才有效。|
 | `0x150` | `__le32` | `s_blocks_count_hi` | 块计数的高32位。 |
 | `0x154` | `__le32` | `s_r_blocks_count_hi` | 保留块计数的高32位。 |
@@ -156,102 +156,102 @@ ext4超级块在`struct ext4_super_block`中的布局如下：
 
 | 值 | 描述 |
 | -- | --- |
-| 0x1 | 目录预分配 (COMPAT_DIR_PREALLOC) |
-| 0x2 | "imagic inodes"。从代码中看不清楚这是做什么的 (COMPAT_IMAGIC_INODES) | 
-| 0x4 | 有日志 (COMPAT_HAS_JOURNAL) |
-| 0x8 | 支持扩展属性 (COMPAT_EXT_ATTR) |
-| 0x10 | 为文件系统扩展保留GDT块 (COMPAT_RESIZE_INODE)。需要RO_COMPAT_SPARSE_SUPER |
-| 0x20 | 有目录索引 (COMPAT_DIR_INDEX)0x40"懒惰BG"。不在Linux内核中，似乎是用于未初始化的块组？(COMPAT_LAZY_BG) |
-| 0x80 | "排除inode"。未使用 (COMPAT_EXCLUDE_INODE) |
-| 0x100 | "排除位图"。似乎用于指示存在与快照相关的排除位图？在内核或`e2fsprogs`中未定义 (COMPAT_EXCLUDE_BITMAP) |
-| 0x200 | 稀疏超级块，v2。如果设置了此标志，SB字段`s_backup_bgs`指向包含备份超级块的两个块组 (COMPAT_SPARSE_SUPER2) |
-| 0x400 | 支持快速提交。尽管快速提交块向后不兼容，但快速提交块并不总是出现在日志中。如果日志中存在快速提交块，则设置JBD2不兼容特性(JBD2_FEATURE_INCOMPAT_FAST_COMMIT)(COMPAT_FAST_COMMIT)。|
-| 0x1000 | 已分配孤儿文件。这是一种特殊文件，用于更有效地跟踪已取消链接但仍然打开的inode。当文件中可能有任何条目时，我们还会设置适当的rocompat特性(RO_COMPAT_ORPHAN_PRESENT)。 |
+| `0x1` | 目录预分配 (`COMPAT_DIR_PREALLOC`) |
+| `0x2` | "imagic inodes"。从代码中看不清楚这是做什么的 (`COMPAT_IMAGIC_INODES`) | 
+| `0x4` | 有日志 (`COMPAT_HAS_JOURNAL`) |
+| `0x8` | 支持扩展属性 (`COMPAT_EXT_ATTR`) |
+| `0x10` | 为文件系统扩展保留GDT块 (`COMPAT_RESIZE_INODE`)。需要`RO_COMPAT_SPARSE_SUPER` |
+| `0x20` | 有目录索引 (`COMPAT_DIR_INDEX`)0x40"懒惰BG"。不在Linux内核中，似乎是用于未初始化的块组？(`COMPAT_LAZY_BG`) |
+| `0x80` | "排除inode"。未使用 (`COMPAT_EXCLUDE_INODE`) |
+| `0x100` | "排除位图"。似乎用于指示存在与快照相关的排除位图？在内核或`e2fsprogs`中未定义 (`COMPAT_EXCLUDE_BITMAP`) |
+| `0x200` | 稀疏超级块，v2。如果设置了此标志，SB字段`s_backup_bgs`指向包含备份超级块的两个块组 (`COMPAT_SPARSE_SUPER2`) |
+| `0x400` | 支持快速提交。尽管快速提交块向后不兼容，但快速提交块并不总是出现在日志中。如果日志中存在快速提交块，则设置JBD2不兼容特性(`JBD2_FEATURE_INCOMPAT_FAST_COMMIT`)(`COMPAT_FAST_COMMIT`)。|
+| `0x1000` | 已分配孤儿文件。这是一种特殊文件，用于更有效地跟踪已取消链接但仍然打开的inode。当文件中可能有任何条目时，我们还会设置适当的rocompat特性(`RO_COMPAT_ORPHAN_PRESENT`)。 |
 
 `super_incompat`特性字段是以下任意组合：
 
 | 值 | 描述 |
 | --- | ---- | 
-| 0x1 | 压缩(INCOMPAT_COMPRESSION)。|
-| 0x2 | 目录条目记录文件类型。见下面的ext4_dir_entry_2(INCOMPAT_FILETYPE)。|
-| 0x4 | 文件系统需要恢复(INCOMPAT_RECOVER)。| 
-| 0x8 | 文件系统有单独的日志设备(INCOMPAT_JOURNAL_DEV)。|
-| 0x10 | 元块组。请参阅前面对此特性的讨论(INCOMPAT_META_BG)。| 
-| 0x40 | 此文件系统中的文件使用区段(INCOMPAT_EXTENTS)。|
-| 0x80 | 启用2^64块的文件系统大小(INCOMPAT_64BIT)。| 
-| 0x100 | 多重挂载保护(INCOMPAT_MMP)。| 
-| 0x200 | 灵活块组。请参阅前面对此特性的讨论(INCOMPAT_FLEX_BG)。|
-| 0x400 | inode可用于存储大型扩展属性值(INCOMPAT_EA_INODE)。|
-| 0x1000 | 目录条目中的数据(INCOMPAT_DIRDATA)。（未实现？）|
-| 0x2000 | 元数据校验和种子存储在超级块中。此特性使管理员能够在文件系统挂载时更改metadata_csum文件系统的UUID；没有它，校验和定义要求重写所有元数据块(INCOMPAT_CSUM_SEED)。|
-| 0x4000 | 大型目录>2GB或3级htree(INCOMPAT_LARGEDIR)。在此特性之前，目录不能大于4GiB，htree深度不能超过2级。如果启用此特性，目录可以大于4GiB，最大htree深度为3。|
-| 0x8000 | inode中的数据(INCOMPAT_INLINE_DATA)。|
-| 0x10000 | 文件系统上存在加密inode。(INCOMPAT_ENCRYPT)。|
+| `0x1` | 压缩(`INCOMPAT_COMPRESSION`)。|
+| `0x2` | 目录条目记录文件类型。见下面的`ext4_dir_entry_2`(`INCOMPAT_FILETYPE`)。|
+| `0x4` | 文件系统需要恢复(`INCOMPAT_RECOVER`)。| 
+| `0x8` | 文件系统有单独的日志设备(`INCOMPAT_JOURNAL_DEV`)。|
+| `0x10` | 元块组。请参阅前面对此特性的讨论(`INCOMPAT_META_BG`)。| 
+| `0x40` | 此文件系统中的文件使用区段(`INCOMPAT_EXTENTS`)。|
+| `0x80` | 启用2^64块的文件系统大小(`INCOMPAT_64BIT`)。| 
+| `0x100` | 多重挂载保护(`INCOMPAT_MMP`)。| 
+| `0x200` | 灵活块组。请参阅前面对此特性的讨论(`INCOMPAT_FLEX_BG`)。|
+| `0x400` | inode可用于存储大型扩展属性值(`INCOMPAT_EA_INODE`)。|
+| `0x1000` | 目录条目中的数据(`INCOMPAT_DIRDATA`)。（未实现？）|
+| `0x2000` | 元数据校验和种子存储在超级块中。此特性使管理员能够在文件系统挂载时更改`metadata_csum`文件系统的UUID；没有它，校验和定义要求重写所有元数据块(INCOMPAT_CSUM_SEED)。|
+| `0x4000` | 大型目录>2GB或3级htree(`INCOMPAT_LARGEDIR`)。在此特性之前，目录不能大于4GiB，htree深度不能超过2级。如果启用此特性，目录可以大于4GiB，最大htree深度为3。|
+| `0x8000` | inode中的数据(`INCOMPAT_INLINE_DATA`)。|
+| `0x10000` | 文件系统上存在加密inode。(`INCOMPAT_ENCRYPT`)。|
 
 `super_rocompat`特性字段是以下任意组合：
 
 | 值 | 描述 |
 | --- | ---- | 
-| 0x1 | 稀疏超级块。请参阅前面对此特性的讨论(RO_COMPAT_SPARSE_SUPER)。|
-| 0x2 | 此文件系统已用于存储大于2GiB的文件(RO_COMPAT_LARGE_FILE)。|
-| 0x4 | 内核或e2fsprogs中未使用(RO_COMPAT_BTREE_DIR)。|
-| 0x8 | 此文件系统具有以逻辑块为单位（而非512字节扇区）表示大小的文件。这意味着一个非常大的文件！(RO_COMPAT_HUGE_FILE)
-| 0x10 | 组描述符有校验和。除了检测损坏外，这对于使用未初始化组的懒格式化也很有用(RO_COMPAT_GDT_CSUM)。|
-| 0x20 | 表示旧的ext3 32,000子目录限制不再适用(RO_COMPAT_DIR_NLINK)。如果目录的i_links_count超过64,999，将设置为1。|
-| 0x40 | 表示此文件系统上存在大型inode(RO_COMPAT_EXTRA_ISIZE)。|
-| 0x80 | 此文件系统有快照(RO_COMPAT_HAS_SNAPSHOT)。|
-| 0x100 | 配额(RO_COMPAT_QUOTA)。|
-| 0x200 | 此文件系统支持"bigalloc"，这意味着文件区段以块的集群为单位跟踪，而不是以块为单位(RO_COMPAT_BIGALLOC)。|
-| 0x400 | 此文件系统支持元数据校验和。(RO_COMPAT_METADATA_CSUM；暗示RO_COMPAT_GDT_CSUM，尽管不能设置GDT_CSUM) |
-| 0x800 | 文件系统支持副本。此功能既不在内核中也不在e2fsprogs中。(RO_COMPAT_REPLICA)0x1000只读文件系统镜像；内核不会以读写方式挂载此镜像，大多数工具将拒绝写入该镜像。(RO_COMPAT_READONLY) |
-| 0x2000 | 文件系统跟踪项目配额。(RO_COMPAT_PROJECT) |
-| 0x8000 | 文件系统上可能存在完整性校验inode。(RO_COMPAT_VERITY) |
-| 0x10000 | 表示孤儿文件可能有有效的孤儿条目，因此我们需要在挂载文件系统时清理它们(RO_COMPAT_ORPHAN_PRESENT)。|
+| `0x1` | 稀疏超级块。请参阅前面对此特性的讨论(`RO_COMPAT_SPARSE_SUPER`)。|
+| `0x2` | 此文件系统已用于存储大于2GiB的文件(`RO_COMPAT_LARGE_FILE`)。|
+| `0x4` | 内核或e2fsprogs中未使用(`RO_COMPAT_BTREE_DIR`)。|
+| `0x8` | 此文件系统具有以逻辑块为单位（而非512字节扇区）表示大小的文件。这意味着一个非常大的文件！(`RO_COMPAT_HUGE_FILE`)
+| `0x10` | 组描述符有校验和。除了检测损坏外，这对于使用未初始化组的懒格式化也很有用(`RO_COMPAT_GDT_CSUM`)。|
+| `0x20` | 表示旧的ext3 32,000子目录限制不再适用(`RO_COMPAT_DIR_NLINK`)。如果目录的i_links_count超过64,999，将设置为1。|
+| `0x40` | 表示此文件系统上存在大型inode(`RO_COMPAT_EXTRA_ISIZE`)。|
+| `0x80` | 此文件系统有快照(`RO_COMPAT_HAS_SNAPSHOT`)。|
+| `0x100` | 配额(`RO_COMPAT_QUOTA`)。|
+| `0x200` | 此文件系统支持"bigalloc"，这意味着文件区段以块的集群为单位跟踪，而不是以块为单位(`RO_COMPAT_BIGALLOC`)。|
+| `0x400` | 此文件系统支持元数据校验和。(`RO_COMPAT_METADATA_CSUM`；暗示`RO_COMPAT_GDT_CSUM`，尽管不能设置GDT_CSUM) |
+| `0x800` | 文件系统支持副本。此功能既不在内核中也不在e2fsprogs中。(`RO_COMPAT_REPLICA`)0x1000只读文件系统镜像；内核不会以读写方式挂载此镜像，大多数工具将拒绝写入该镜像。(RO_COMPAT_READONLY) |
+| `0x2000` | 文件系统跟踪项目配额。(`RO_COMPAT_PROJECT`) |
+| `0x8000` | 文件系统上可能存在完整性校验inode。(`RO_COMPAT_VERITY`) |
+| `0x10000` | 表示孤儿文件可能有有效的孤儿条目，因此我们需要在挂载文件系统时清理它们(`RO_COMPAT_ORPHAN_PRESENT`)。|
 
 `s_def_hash_version`字段是以下之一：
 
 | 值 | 描述 |
 | -- | --- |
-| 0x0 | 传统。|
-| 0x1 | 半MD4。| 
-| 0x2 | Tea。|
-| 0x3 | 传统，无符号。|
-| 0x4 | 半MD4，无符号。| 
-| 0x5 | Tea，无符号。|
+| `0x0` | 传统。|
+| `0x1` | 半MD4。| 
+| `0x2` | Tea。|
+| `0x3` | 传统，无符号。|
+| `0x4` | 半MD4，无符号。| 
+| `0x5` | Tea，无符号。|
 
 `s_default_mount_opts`字段是以下任意组合：
 
 | 值 | 描述 |
 | -- | --- |
-| 0x0001 | 在（重新）挂载时打印调试信息。(EXT4_DEFM_DEBUG) |
-| 0x0002 | 新文件采用包含目录的gid（而不是当前进程的fsgid）。(EXT4_DEFM_BSDGROUPS) |
-| 0x0004 | 支持用户空间提供的扩展属性。(EXT4_DEFM_XATTR_USER) |
-| 0x0008 | 支持POSIX访问控制列表(ACL)。(EXT4_DEFM_ACL) |
-| 0x0010 | 不支持32位UID。(EXT4_DEFM_UID16)|
-| 0x0020 | 所有数据和元数据都提交到日志。(EXT4_DEFM_JMODE_DATA) |
-| 0x0040 | 在元数据提交到日志之前，所有数据都刷新到磁盘。(EXT4_DEFM_JMODE_ORDERED)|
-| 0x0060 | 不保留数据顺序；数据可能在元数据写入后才写入。(EXT4_DEFM_JMODE_WBACK) | 
-| 0x0100 | 禁用写入刷新。(EXT4_DEFM_NOBARRIER) |
-| 0x0200 | 跟踪文件系统中哪些块是元数据，因此不应用作数据块。此选项将在3.18上默认启用，希望如此。(EXT4_DEFM_BLOCK_VALIDITY) |
-| 0x0400 | 启用DISCARD支持，告知存储设备哪些块变得未使用。(EXT4_DEFM_DISCARD)|
-| 0x0800 | 禁用延迟分配。(EXT4_DEFM_NODELALLOC)|
+| `0x0001` | 在（重新）挂载时打印调试信息。(`EXT4_DEFM_DEBUG`) |
+| `0x0002` | 新文件采用包含目录的gid（而不是当前进程的fsgid）。(`EXT4_DEFM_BSDGROUPS`) |
+| `0x0004` | 支持用户空间提供的扩展属性。(`EXT4_DEFM_XATTR_USER`) |
+| `0x0008` | 支持POSIX访问控制列表(ACL)。(`EXT4_DEFM_ACL`) |
+| `0x0010` | 不支持32位UID。(`EXT4_DEFM_UID16`)|
+| `0x0020` | 所有数据和元数据都提交到日志。(`EXT4_DEFM_JMODE_DATA`) |
+| `0x0040` | 在元数据提交到日志之前，所有数据都刷新到磁盘。(`EXT4_DEFM_JMODE_ORDERED`)|
+| `0x0060` | 不保留数据顺序；数据可能在元数据写入后才写入。(`EXT4_DEFM_JMODE_WBACK`) | 
+| `0x0100` | 禁用写入刷新。(`EXT4_DEFM_NOBARRIER`) |
+| `0x0200` | 跟踪文件系统中哪些块是元数据，因此不应用作数据块。此选项将在3.18上默认启用，希望如此。(`EXT4_DEFM_BLOCK_VALIDITY`) |
+| `0x0400` | 启用DISCARD支持，告知存储设备哪些块变得未使用。(`EXT4_DEFM_DISCARD`)|
+| `0x0800` | 禁用延迟分配。(`EXT4_DEFM_NODELALLOC`)|
 
 `s_flags`字段是以下任意组合：
 
 | 值 | 描述 |
 | -- | --- |
-| 0x0001 | 使用带符号的目录哈希。|
-| 0x0002 | 使用无符号的目录哈希。|
-| 0x0004 | 用于测试开发代码。|
+| `0x0001` | 使用带符号的目录哈希。|
+| `0x0002` | 使用无符号的目录哈希。|
+| `0x0004` | 用于测试开发代码。|
 
 `s_encrypt_algos`列表可以包含以下任意一项：
 
 | 值 | 描述 |
 | -- | --- |
-| 0 | 无效算法(ENCRYPTION_MODE_INVALID)。|
-| 1 | XTS模式下的256位AES(ENCRYPTION_MODE_AES_256_XTS)。|
-| 2 | GCM模式下的256位AES(ENCRYPTION_MODE_AES_256_GCM)。|
-| 3 | CBC模式下的256位AES(ENCRYPTION_MODE_AES_256_CBC)。|
+| `0` | 无效算法(`ENCRYPTION_MODE_INVALID`)。|
+| `1` | XTS模式下的256位AES(`ENCRYPTION_MODE_AES_256_XTS`)。|
+| `2` | GCM模式下的256位AES(`ENCRYPTION_MODE_AES_256_GCM`)。|
+| `3` | CBC模式下的256位AES(`ENCRYPTION_MODE_AES_256_CBC`)。|
 
 超级块的总大小为1024字节。
 
@@ -273,38 +273,38 @@ ext4超级块在`struct ext4_super_block`中的布局如下：
 
 | 偏移量 | 类型 | 名称 | 描述 |
 | ----- | ---- | ---- | ---- |
-| 0x0 | __le32 | bg_block_bitmap_lo | 块位图位置的低32位。 |
-| 0x4 | __le32 | bg_inode_bitmap_lo | inode位图位置的低32位。|
-| 0x8 | __le32 | bg_inode_table_lo | inode表位置的低32位。|
-| 0xC | __le16| bg_free_blocks_count_lo | 空闲块计数的低16位。 |
-| 0xE | __le16 | bg_free_inodes_count_lo | 空闲inode计数的低16位。|
-| 0x10 | __le16 | bg_used_dirs_count_lo | 目录计数的低16位。 |
-| 0x12 | __le16 | bg_flags | 块组标志。参见下面的bgflags表。 |
-| 0x14 | __le32 | bg_exclude_bitmap_lo | 快照排除位图位置的低32位。|
-| 0x18 | __le16 | bg_block_bitmap_csum_lo | 块位图校验和的低16位。|
-| 0x1A | __le16 | bg_inode_bitmap_csum_lo | inode位图校验和的低16位。|
-| 0x1C | __le16 | bg_itable_unused_lo | 未使用inode计数的低16位。如果设置，我们无需扫描超过此组inode表中的(sb.s_inodes_per_group - gdt.bg_itable_unused)个条目。
-| 0x1E | __le16 | bg_checksum | 组描述符校验和；如果设置了RO_COMPAT_GDT_CSUM特性，则为crc16(sb_uuid+group_num+bg_desc)，或者如果设置了RO_COMPAT_METADATA_CSUM特性，则为crc32c(sb_uuid+group_num+bg_desc) & 0xFFFF。在计算crc16校验和时跳过bg_desc中的bg_checksum字段，如果使用crc32c校验和则设置为零。|
+| `0x0` | `__le32` | `bg_block_bitmap_lo` | 块位图位置的低32位。 |
+| `0x4` | `__le32` | `bg_inode_bitmap_lo` | inode位图位置的低32位。|
+| `0x8` | `__le32` | `bg_inode_table_lo` | inode表位置的低32位。|
+| `0xC` | `__le16` | `bg_free_blocks_count_lo` | 空闲块计数的低16位。 |
+| `0xE` | `__le16` | `bg_free_inodes_count_lo` | 空闲inode计数的低16位。|
+| `0x10` | `__le16` | `bg_used_dirs_count_lo` | 目录计数的低16位。 |
+| `0x12` | `__le16` | `bg_flags` | 块组标志。参见下面的bgflags表。 |
+| `0x14` | `__le32` | `bg_exclude_bitmap_lo` | 快照排除位图位置的低32位。|
+| `0x18` | `__le16` | `bg_block_bitmap_csum_lo` | 块位图校验和的低16位。|
+| `0x1A` | `__le16` | `bg_inode_bitmap_csum_lo` | inode位图校验和的低16位。|
+| `0x1C` | `__le16` | `bg_itable_unused_lo` | 未使用inode计数的低16位。如果设置，我们无需扫描超过此组inode表中的(`sb.s_inodes_per_group - gdt.bg_itable_unused`)个条目。
+| `0x1E` | `__le16` | `bg_checksum` | 组描述符校验和；如果设置了`RO_COMPAT_GDT_CSUM`特性，则为crc16(sb_uuid+group_num+bg_desc)，或者如果设置了RO_COMPAT_METADATA_CSUM特性，则为crc32c(sb_uuid+group_num+bg_desc) & 0xFFFF。在计算crc16校验和时跳过bg_desc中的`bg_checksum`字段，如果使用`crc32c`校验和则设置为零。|
 | |  | | 以下字段仅在启用64bit特性且s_desc_size > 32时存在。|
-| 0x20 | __le32 | bg_block_bitmap_hi | 块位图位置的高32位。|
-| 0x24 | __le32 | bg_inode_bitmap_hi | inode位图位置的高32位。|
-| 0x28 | __le32 | bg_inode_table_hi  |inode表位置的高32位。| 
-| 0x2C | __le16 | bg_free_blocks_count_hi | 空闲块计数的高16位。|
-| 0x2E | __le16 | bg_free_inodes_count_hi | 空闲inode计数的高16位。|
-| 0x30 | __le16 | bg_used_dirs_count_hi | 目录计数的高16位。|
-| 0x32 | __le16 | bg_itable_unused_hi | 未使用inode计数的高16位。|
-| 0x34 | __le32 | bg_exclude_bitmap_hi | 快照排除位图位置的高32位。|
-| 0x38 | __le16 | bg_block_bitmap_csum_hi |块位图校验和的高16位。|
-| 0x3A | __le16 | bg_inode_bitmap_csum_hi | inode位图校验和的高16位。|
-| 0x3C | __u32 | bg_reserved | 填充至64字节。|
+| `0x20` | `__le32` | `bg_block_bitmap_hi` | 块位图位置的高32位。|
+| `0x24` | `__le32` | `bg_inode_bitmap_hi` | inode位图位置的高32位。|
+| `0x28` | `__le32` | `bg_inode_table_hi`  |inode表位置的高32位。| 
+| `0x2C` | `__le16` | `bg_free_blocks_count_hi` | 空闲块计数的高16位。|
+| `0x2E` | `__le16` | `bg_free_inodes_count_hi` | 空闲inode计数的高16位。|
+| `0x30` | `__le16` | `bg_used_dirs_count_hi` | 目录计数的高16位。|
+| `0x32` | `__le16` | `bg_itable_unused_hi` | 未使用inode计数的高16位。|
+| `0x34` | `__le32` | `bg_exclude_bitmap_hi` | 快照排除位图位置的高32位。|
+| `0x38` | `__le16` | `bg_block_bitmap_csum_hi` |块位图校验和的高16位。|
+| `0x3A` | `__le16` | `bg_inode_bitmap_csum_hi` | inode位图校验和的高16位。|
+| `0x3C` | `__u32` | `bg_reserved` | 填充至64字节。|
 
 块组标志可以是以下任意组合：
 
 | 值 | 描述 |
 | -- | --- |
-| 0x1 | inode表和位图未初始化(EXT4_BG_INODE_UNINIT)。|
-| 0x2 | 块位图未初始化(EXT4_BG_BLOCK_UNINIT)。|
-| 0x4 | inode表已置零(EXT4_BG_INODE_ZEROED)。|
+| `0x1` | inode表和位图未初始化(`EXT4_BG_INODE_UNINIT`)。|
+| `0x2` | 块位图未初始化(`EXT4_BG_BLOCK_UNINIT`)。|
+| `0x4` | inode表已置零(`EXT4_BG_INODE_ZEROED`)。|
 
 ## 3.3. 块和inode位图
 
@@ -314,21 +314,19 @@ inode位图记录inode表中哪些条目正在使用。
 
 与大多数位图一样，一个位表示一个数据块或inode表条目的使用状态。这意味着块组大小为8 * 逻辑块中的字节数。
 
-注意：如果为给定块组设置了`BLOCK_UNINIT`，内核和e2fsprogs代码的各个部分会假装块位图包含零（即组中的所有块都是空闲的）。然而，不一定意味着没有块在使用——如果设置了`meta_bg`，位图和组描述符位于组内。不幸的是，`ext2fs_test_block_bitmap2()`将对这些位置返回'0'，这会产生令人困惑的debugfs输出。
+注意：如果为给定块组设置了`BLOCK_UNINIT`，内核和`e2fsprogs`代码的各个部分会假装块位图包含零（即组中的所有块都是空闲的）。然而，不一定意味着没有块在使用——如果设置了`meta_bg`，位图和组描述符位于组内。不幸的是，`ext2fs_test_block_bitmap2()`将对这些位置返回'0'，这会产生令人困惑的debugfs输出。
 
 > BLOCK_UNINIT标志作用的时机是在文件系统的操作过程中，特别是以下几个场景:
 > 
-> 文件系统挂载时 - 当内核挂载文件系统并读取块组描述符时，如果发现某个块组设置了BLOCK_UNINIT标志，内核会假设该块组的所有块都是空闲的，而不会实际读取块位图的内容。
->
-> 文件系统工具运行时 - 当e2fsprogs工具包中的程序(如e2fsck、debugfs等)处理文件系统时，它们会检查这个标志并相应地调整行为。
->
-> 分配新块时 - 当文件系统需要分配新块时，如果检测到一个块组有BLOCK_UNINIT标志，它会首先初始化该块组的块位图，然后移除这个标志，表示该块组现在已被初始化。
+> + 文件系统挂载时 - 当内核挂载文件系统并读取块组描述符时，如果发现某个块组设置了`BLOCK_UNINIT`标志，内核会假设该块组的所有块都是空闲的，而不会实际读取块位图的内容。
+> + 文件系统工具运行时 - 当`e2fsprogs`工具包中的程序(如`e2fsck`、`debugfs`等)处理文件系统时，它们会检查这个标志并相应地调整行为。
+> + 分配新块时 - 当文件系统需要分配新块时，如果检测到一个块组有`BLOCK_UNINIT`标志，它会首先初始化该块组的块位图，然后移除这个标志，表示该块组现在已被初始化。
 
 ## 3.4. Inode表
 
-Inode表在mkfs时静态分配。每个块组描述符指向表的开始，超级块记录每组的inode数量。有关更多信息，请参阅inode部分。
+Inode表在`mkfs`时静态分配。每个块组描述符指向表的开始，超级块记录每组的inode数量。有关更多信息，请参阅inode部分。
 
-## 3.5. Multiple Mount Protection
+## 3.5. 多重挂载保护
 
 多重挂载保护(MMP)是一种功能，用于防止多个主机尝试同时使用文件系统。当打开文件系统（用于挂载或fsck等）时，节点（称为节点A）上运行的MMP代码检查序列号。如果序列号是`EXT4_MMP_SEQ_CLEAN`，则继续打开。如果序列号是`EXT4_MMP_SEQ_FSCK`，则说明fsck（希望）正在运行，打开立即失败。否则，打开代码将等待指定MMP检查间隔的两倍时间，然后再次检查序列号。如果序列号已更改，则文件系统在另一台机器上处于活动状态，打开失败。如果MMP代码通过了所有这些检查，将生成一个新的MMP序列号并写入MMP块，然后继续挂载。
 
@@ -336,19 +334,19 @@ Inode表在mkfs时静态分配。每个块组描述符指向表的开始，超�
 
 每当打开操作成功时，主机名和设备文件名都会写入MMP块。MMP代码不使用这些值；它们纯粹是为了提供信息。
 
-校验和是针对FS UUID和MMP结构计算的。MMP结构(struct mmp_struct)如下：
+校验和是针对FS UUID和MMP结构计算的。MMP结构(`struct mmp_struct`)如下：
 
 | 偏移量 | 类型 | 名称 | 描述 |
 | ----- | ---- | ---- | ---- |
-| 0x0 | __le32 | mmp_magic | MMP的魔术数字，0x004D4D50（"MMP"）。
-| 0x4 | __le32 | mmp_seq | 序列号，定期更新。|
-| 0x8 | __le64 | mmp_time | MMP块最后更新的时间。|
-| 0x10 | char[64] | mmp_nodename | 打开文件系统的节点的主机名。|
-| 0x50 | char[32] | mmp_bdevname | 文件系统的块设备名称。 |
-| 0x70 | __le16 | mmp_check_interval | MMP重新检查间隔，以秒为单位。|
-| 0x72 | __le16 | mmp_pad1 | 零。|
-| 0x74 | __le32[226] | mmp_pad2 | 零。|
-| 0x3FC | __le32 | mmp_checksum | MMP块的校验和。|
+| `0x0` | `__le32` | `mmp_magic` | MMP的魔术数字，`0x004D4D50`（"MMP"）。
+| `0x4` | `__le32` | `mmp_seq` | 序列号，定期更新。|
+| `0x8` | `__le64` | `mmp_time` | MMP块最后更新的时间。|
+| `0x10` | `char[64]` | `mmp_nodename` | 打开文件系统的节点的主机名。|
+| `0x50` | `char[32]` | `mmp_bdevname` | 文件系统的块设备名称。 |
+| `0x70` | `__le16` | `mmp_check_interval` | MMP重新检查间隔，以秒为单位。|
+| `0x72` | `__le16` | `mmp_pad1` | 零。|
+| `0x74` | `__le32[226]` | `mmp_pad2` | 零。|
+| `0x3FC` | `__le32` | `mmp_checksum` | MMP块的校验和。|
 
 ## 3.6. Journal (jbd2)
 
@@ -356,9 +354,9 @@ Inode表在mkfs时静态分配。每个块组描述符指向表的开始，超�
 
 出于性能原因，ext4默认只通过日志写入文件系统元数据。这意味着在崩溃后，文件数据块不能保证处于任何一致的状态。如果这种默认保证级别（`data=ordered`）不令人满意，有一个挂载选项可以控制日志行为。如果`data=journal`，所有数据和元数据都通过日志写入磁盘。这更慢但最安全。如果`data=writeback`，在元数据通过日志写入磁盘之前，不会将脏数据块刷新到磁盘。
 
-在`data=ordered`模式下，Ext4还支持快速提交，这有助于显著减少提交延迟。默认的`data=ordered`模式通过将元数据块记录到日志来工作。在快速提交模式下，Ext4只存储需要重新创建受影响元数据的最小增量，存储在与JBD2共享的快速提交空间中。一旦快速提交区域填满或者无法进行快速提交或者JBD2提交计时器超时，Ext4执行传统的完整提交。完整提交使其之前发生的所有快速提交无效，从而使快速提交区域为进一步的快速提交腾出空间。此功能需要在mkfs时启用。
+在`data=ordered`模式下，Ext4还支持快速提交，这有助于显著减少提交延迟。默认的`data=ordered`模式通过将元数据块记录到日志来工作。在快速提交模式下，Ext4只存储需要重新创建受影响元数据的最小增量，存储在与JBD2共享的快速提交空间中。一旦快速提交区域填满或者无法进行快速提交或者JBD2提交计时器超时，Ext4执行传统的完整提交。完整提交使其之前发生的所有快速提交无效，从而使快速提交区域为进一步的快速提交腾出空间。此功能需要在`mkfs`时启用。
 
-日志inode通常是inode 8。日志inode的前68个字节在ext4超级块中复制。日志本身是文件系统内的正常（但隐藏）文件。该文件通常消耗整个块组，尽管mke2fs尝试将其放在磁盘中间。
+日志inode通常是inode 8。日志inode的前68个字节在ext4超级块中复制。日志本身是文件系统内的正常（但隐藏）文件。该文件通常消耗整个块组，尽管`mke2fs`尝试将其放在磁盘中间。
 
 jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 
@@ -366,22 +364,67 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 
 嵌入在ext4文件系统中的日志的最大大小是2^32块。jbd2本身似乎并不关心。
 
+> ***日志工作流程***
+>
+> **预写阶段**
+> + 所有重要的元数据更改（如创建文件、修改目录等）首先写入日志
+> + 这些写入优先执行，确保关键数据尽快持久化
+> + 日志写入通常是顺序的，减少了磁盘寻道开销
+> 
+> **提交记录**
+> + 当一个完整事务的所有数据都写入日志并刷新到磁盘后
+> + 系统写入一个提交记录，标志着事务完成
+> + 提交记录是事务完整性的关键标志
+> 
+> **实际更新**
+> + 在后台，系统将日志中的更改应用到实际的文件系统结构中
+> + 这个过程可能涉及大量寻道或多次小型读写操作
+> + 完成后，相应的提交记录被清除，释放日志空间
+> 
+> **崩溃恢复**
+> + 如果系统在第二步之后、第三步完成之前崩溃
+> + 在下次挂载时，系统会检测到未清除的提交记录
+> + 文件系统会"重放"日志，将已提交但未完成的更改应用到实际文件系统
+
 ### 3.6.1. 布局
 
 一般来说，日志具有以下格式：
 
 | 超级块 | 描述符块 (数据块或撤销块) \[更多数据或撤销 \] 提交块 | \[更多事务...\] |
-| ----- | ----- | ----- |
+| ----- | :-----: | ----- |
 | | 一个事务 | |
 
 请注意，事务以描述符和一些数据开始，或者以块撤销列表开始。完成的事务总是以提交结束。如果没有提交记录（或校验和不匹配），事务将在重放期间被丢弃。
+
+> **ext4日志的基本结构**
+>
+> ext4的日志由以下组件按顺序组织：
+> 
+> 1. 日志超级块：
+> + 位于日志的起始位置
+> + 包含日志的元数据信息（如序列号、块大小等）
+> + 帮助系统识别和理解日志
+> 2. 事务内容：每个事务包含：
+> 
+> + 描述符块：详细描述事务内容，可能是：
+>   + 数据块描述符：指明接下来有哪些数据块
+>   + 撤销块描述符：指明接下来有哪些撤销信息
+> + 数据/撤销块：实际的元数据变更或撤销信息
+> + 提交块：标志事务完成的标记
+> 3. 多个事务：日志可以包含多个连续的事务记录
+> **事务完整性机制**
+> + 每个完整的事务必须以提交块结束
+> + 如果某个事务没有提交记录，或者提交记录的校验和不匹配：
+>   + 该事务在恢复过程中会被视为不完整
+>   + 系统会丢弃该事务及其后的所有事务
+>   + 只会重放到最后一个有效的提交记录为止
 
 ### 3.6.2. 外部日志
 
 可选地，可以使用外部日志设备创建ext4文件系统（与使用保留inode的内部日志相对）。在这种情况下，在文件系统设备上，`s_journal_inum`应该为零，`s_journal_uuid`应该设置。在日志设备上，ext4超级块将位于通常的位置，具有匹配的UUID。日志超级块将位于超级块之后的下一个完整块中。
 
 | 1024字节的填充 | ext4超级块 | 日志超级块 | 描述符块 (数据块或撤销块) \[更多数据或撤销\] 提交块 | \[更多事务...\] | 
-| --- | --- | --- | --- | --- |
+| --- | --- | --- | :---: | --- |
 | | | | 一个事务 | |
 
 ### 3.6.3. 块头
@@ -390,9 +433,9 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 
 | 偏移量 | 类型 | 名称 | 描述 |
 | ----- | ---- | ---- | ---- |
-| 0x0 | __be32 | h_magic | jbd2魔术数字，0xC03B3998。 |
-| 0x4 | __be32 | h_blocktype | 描述此块包含的内容。参见下面的`jbd2_blocktype`表。|
-| 0x8 | __be32 | h_sequence | 与此块关联的事务ID。|
+| `0x0` | `__be32` | `h_magic` | jbd2魔术数字，0xC03B3998。 |
+| `0x4` | `__be32` | `h_blocktype` | 描述此块包含的内容。参见下面的`jbd2_blocktype`表。|
+| `0x8` | `__be32` | `h_sequence` | 与此块关联的事务ID。|
 
 日志块类型可以是以下任意一种：
 
@@ -412,44 +455,45 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 | 偏移量 | 类型 | 名称 | 描述 |
 | ----- | ---- | ---- | ---- |
 |  |  |  | 描述日志的静态信息。|
-| 0x0 | journal_header_t (12 bytes) | s_header | 标识这是超级块的通用头。|
-| 0xC | __be32 | s_blocksize | 日志设备块大小。| 0x10 | __be32 | s_maxlen | 此日志中的块总数。|
-| 0x14 | __be32 | s_first | 日志信息的第一个块。描述日志当前状态的动态信息。|
-| 0x18 | __be32 | s_sequence | 日志中预期的第一个提交ID。|
-| 0x1C | __be32 | s_start | 日志开始的块号。与注释相反，此字段为零并不意味着日志是干净的！|
-| 0x20 | __be32 | s_errno | 错误值，由jbd2_journal_abort()设置。以下字段仅在v2超级块中有效。|
-| 0x24 | __be32 | s_feature_compat | 兼容特性集。参见下面的jbd2_compat表。| 
-| 0x28 | __be32 | s_feature_incompat | 不兼容特性集。参见下面的jbd2_incompat表。|
-| 0x2C | __be32 | s_feature_ro_compat | 只读兼容特性集。目前没有任何这样的特性。|
-| 0x30 | __u8 | s_uuid[16] | 日志的128位uuid。在挂载时与ext4超级块中的副本进行比较。|
-| 0x40 | __be32 | s_nr_users | 共享此日志的文件系统数量。|
-| 0x44 | __be32 | s_dynsuper | 动态超级块副本的位置。（不使用？）|
-| 0x48 | __be32 | s_max_transaction | 每个事务的日志块限制。（不使用？）|
-| 0x4C | __be32 | s_max_trans_data | 每个事务的数据块限制。（不使用？）|
-| 0x50 | __u8s | _checksum_type  |用于日志的校验和算法。有关更多信息，请参见jbd2_checksum_type。|
-| 0x51 | __u8[3] | s_padding2 | 
-| 0x54 | __be32 | s_num_fc_blocks | 日志中的快速提交块数量。|
-| 0x58 | __be32 | s_head | 日志头（第一个未使用的块）的块号，仅在日志为空时更新。|
-| 0x5C | __u32 | s_padding[40] | | 
-| 0xFC | __be32 | s_checksum |整个超级块的校验和，此字段设置为零。|
-| 0x100 | __u8 | s_users[16*48] | 共享日志的所有文件系统的ID。e2fsprogs/Linux不允许共享外部日志，但我想Lustre（或ocfs2？）使用jbd2代码可能会。|
+| `0x0` | `journal_header_t` (12 bytes) | `s_header` | 标识这是超级块的通用头。|
+| `0xC` | `__be32` | `s_blocksize` | 日志设备块大小。|
+| `0x10` | `__be32` | `s_maxlen` | 此日志中的块总数。|
+| `0x14` | `__be32` | `s_first` | 日志信息的第一个块。描述日志当前状态的动态信息。|
+| `0x18` | `__be32` | `s_sequence` | 日志中预期的第一个提交ID。|
+| `0x1C` | `__be32` | `s_start` | 日志开始的块号。与注释相反，此字段为零并不意味着日志是干净的！|
+| `0x20` | `__be32` | `s_errno` | 错误值，由jbd2_journal_abort()设置。以下字段仅在v2超级块中有效。|
+| `0x24` | `__be32` | `s_feature_compat` | 兼容特性集。参见下面的jbd2_compat表。| 
+| `0x28` | `__be32` | ``s_feature_incompat`` | 不兼容特性集。参见下面的jbd2_incompat表。|
+| `0x2C` | `__be32` | `s_feature_ro_compat` | 只读兼容特性集。目前没有任何这样的特性。|
+| `0x30` | `__u8` | `s_uuid[16]` | 日志的128位uuid。在挂载时与ext4超级块中的副本进行比较。|
+| `0x40` | `__be32` | `s_nr_users` | 共享此日志的文件系统数量。|
+| `0x44` | `__be32` | `s_dynsuper` | 动态超级块副本的位置。（不使用？）|
+| `0x48` | `__be32` | `s_max_transaction` | 每个事务的日志块限制。（不使用？）|
+| `0x4C` | `__be32` | `s_max_trans_data` | 每个事务的数据块限制。（不使用？）|
+| `0x50` | `__u8` | `s_checksum_type`  |用于日志的校验和算法。有关更多信息，请参见jbd2_checksum_type。|
+| `0x51` | `__u8[3]` | `s_padding2` | 
+| `0x54` | `__be32` | `s_num_fc_blocks` | 日志中的快速提交块数量。|
+| `0x58` | `__be32` | `s_head` | 日志头（第一个未使用的块）的块号，仅在日志为空时更新。|
+| `0x5C` | `__u32` | `s_padding[40]` | | 
+| `0xFC` | `__be32` | `s_checksum` |整个超级块的校验和，此字段设置为零。|
+| `0x100` | `__u8` | `s_users[16*48]` | 共享日志的所有文件系统的ID。`e2fsprogs/Linux`不允许共享外部日志，但我想Lustre（或ocfs2？）使用jbd2代码可能会。|
 
 日志兼容特性是以下任意组合：
 
 | 值 | 描述 |
 | --- | ---- |
-| 0x1 | 日志维护数据块的校验和。(JBD2_FEATURE_COMPAT_CHECKSUM)|
+| `0x1` | 日志维护数据块的校验和。(JBD2_FEATURE_COMPAT_CHECKSUM)|
 
 日志不兼容特性是以下任意组合：
 
 | 值 | 描述 |
 | --- | --- |
-| 0x1 | 日志有块撤销记录。(JBD2_FEATURE_INCOMPAT_REVOKE)|
-| 0x2 | 日志可以处理64位块号。(JBD2_FEATURE_INCOMPAT_64BIT)|
-| 0x4 | 日志异步提交。(JBD2_FEATURE_INCOMPAT_ASYNC_COMMIT) |
-| 0x8 | 该日志使用校验和磁盘格式的v2版本。每个日志元数据块获得自己的校验和，描述符表中的块标签包含日志中每个数据块的校验和。(JBD2_FEATURE_INCOMPAT_CSUM_V2)|
-| 0x10 | 该日志使用校验和磁盘格式的v3版本。这与v2相同，但日志块标签大小是固定的，不管块号的大小如何。(JBD2_FEATURE_INCOMPAT_CSUM_V3)|
-| 0x20 | 日志有快速提交块。(JBD2_FEATURE_INCOMPAT_FAST_COMMIT)|
+| `0x1` | 日志有块撤销记录。(`JBD2_FEATURE_INCOMPAT_REVOKE`)|
+| `0x2` | 日志可以处理64位块号。(`JBD2_FEATURE_INCOMPAT_64BIT`)|
+| `0x4` | 日志异步提交。(`JBD2_FEATURE_INCOMPAT_ASYNC_COMMIT`) |
+| `0x8` | 该日志使用校验和磁盘格式的v2版本。每个日志元数据块获得自己的校验和，描述符表中的块标签包含日志中每个数据块的校验和。(`JBD2_FEATURE_INCOMPAT_CSUM_V2`)|
+| `0x10` | 该日志使用校验和磁盘格式的v3版本。这与v2相同，但日志块标签大小是固定的，不管块号的大小如何。(`JBD2_FEATURE_INCOMPAT_CSUM_V3`)|
+| `0x20` | 日志有快速提交块。(`JBD2_FEATURE_INCOMPAT_FAST_COMMIT`)|
 
 日志校验和类型代码是以下之一。crc32或crc32c是最可能的选择。
 
@@ -466,8 +510,8 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 
 | 偏移量 | 类型 | 名称 | 描述符 |
 | ----- | ---- | ---- | ----- |
-| 0x0 | journal_header_t | (开放编码) | 通用块头。|
-| 0xC | struct journal_block_tag_s | 开放编码数组[] | 足够的标签，要么填满块，要么描述跟随此描述符块的所有数据块。|
+| `0x0` | `journal_header_t` | (开放编码) | 通用块头。|
+| `0xC` | struct `journal_block_tag_s` | 开放编码数组[] | 足够的标签，要么填满块，要么描述跟随此描述符块的所有数据块。|
 
 日志块标签有以下任何格式，取决于设置的日志特性和块标签标志。
 
@@ -475,39 +519,39 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 
 | 偏移量 | 类型 | 名称 | 描述符 |
 | ----- | ---- | ---- | ----- |
-| 0x0 | __be32 | t_blocknr  |对应数据块应在磁盘上结束的位置的低32位。|
-| 0x4 | __be32 | t_flags  |与描述符一起的标志。有关更多信息，请参见jbd2_tag_flags表。|
-| 0x8 | __be32 | t_blocknr_high | 对应数据块应在磁盘上结束的位置的高32位。如果未启用JBD2_FEATURE_INCOMPAT_64BIT，则为零。|
-| 0xC | __be32 | t_checksum | 日志UUID、序列号和数据块的校验和。|
-|     |        |            |此字段似乎是开放编码的。它总是在t_checksum之后。如果设置了"same UUID"标志，则不存在此字段。|
-| 0x8或0xC | char | uuid[16]  |与此标签一起的UUID。此字段似乎是从struct journal_s中的j_uuid字段复制的，但只有tune2fs才触及该字段。
+| `0x0` | `__be32` | `t_blocknr`  |对应数据块应在磁盘上结束的位置的低32位。|
+| `0x4` | `__be32` | `t_flags`  |与描述符一起的标志。有关更多信息，请参见`jbd2_tag_flags`表。|
+| `0x8` | `__be32` | `t_blocknr_high` | 对应数据块应在磁盘上结束的位置的高32位。如果未启用`JBD2_FEATURE_INCOMPAT_64BIT`，则为零。|
+| `0xC` | `__be32` | `t_checksum` | 日志UUID、序列号和数据块的校验和。|
+|     |        |            |此字段似乎是开放编码的。它总是在`t_checksum`之后。如果设置了"same UUID"标志，则不存在此字段。|
+| `0x8`或`0xC` | `char` | `uuid[16]`  |与此标签一起的UUID。此字段似乎是从`struct journal_s`中的`j_uuid`字段复制的，但只有tune2fs才触及该字段。
 
 日志标签标志是以下任意组合：
 
 | 值 | 描述 |
 | -- | --- |
-| 0x1 | 磁盘上的块是转义的。数据块的前四个字节恰好与jbd2魔术数字匹配。|
-| 0x2 | 该块与前一个具有相同的UUID，因此省略了UUID字段。|
-| 0x4 | 数据块被事务删除。(不使用？) |
-| 0x8 | 这是此描述符块中的最后一个标签。|
+| `0x1` | 磁盘上的块是转义的。数据块的前四个字节恰好与jbd2魔术数字匹配。|
+| `0x2` | 该块与前一个具有相同的UUID，因此省略了UUID字段。|
+| `0x4` | 数据块被事务删除。(不使用？) |
+| `0x8` | 这是此描述符块中的最后一个标签。|
 
 如果未设置`JBD2_FEATURE_INCOMPAT_CSUM_V3`，则日志块标签定义为`struct journal_block_tag_s`，其外观如下。大小为8、12、24或28字节：
 
 | 偏移量 | 类型 | 名称 | 描述符 |
 | ----- | ---- | ---- | ----- |
-| 0x0 | __be32 | t_blocknr | 对应数据块应在磁盘上结束的位置的低32位。|
-| 0x4 | __be16 | t_checksum | 日志UUID、序列号和数据块的校验和。注意，只存储低16位。|
-| 0x6 | __be16 | t_flags | 与描述符一起的标志。参见jbd2_tag_flags表。| 
+| `0x0` | `__be32` | `t_blocknr` | 对应数据块应在磁盘上结束的位置的低32位。|
+| `0x4` | `__be16` | `t_checksum` | 日志UUID、序列号和数据块的校验和。注意，只存储低16位。|
+| `0x6` | `__be16` | `t_flags` | 与描述符一起的标志。参见jbd2_tag_flags表。| 
 | | | |以下字段仅在超级块表示支持64位块号时存在。|
-|0x8 | __be32 | t_blocknr_high | 对应数据块应在磁盘上结束的位置的高32位。|
-| | | | 此字段似乎是开放编码的。它总是在t_flags或t_blocknr_high之后。如果设置了"same UUID"标志，则不存在此字段。|
-| 0x8或0xC | char | uuid[16] | 与此标签一起的UUID。此字段似乎是从struct journal_s中的j_uuid字段复制的，但只有tune2fs才触及该字段。|
+|`0x8` | `__be32` | `t_blocknr_high` | 对应数据块应在磁盘上结束的位置的高32位。|
+| | | | 此字段似乎是开放编码的。它总是在`t_flags`或`t_blocknr_high`之后。如果设置了"same UUID"标志，则不存在此字段。|
+| `0x8`或`0xC` | `char` | `uuid[16]` | 与此标签一起的UUID。此字段似乎是从struct journal_s中的j_uuid字段复制的，但只有tune2fs才触及该字段。|
 
 如果设置了JBD2_FEATURE_INCOMPAT_CSUM_V2或JBD2_FEATURE_INCOMPAT_CSUM_V3，则块的末尾是`struct jbd2_journal_block_tail`，其样子如下：
 
 | 偏移量 | 类型 | 名称 | 描述符 |
 | ----- | ---- | ---- | ----- |
-| 0x0 | __be32 | t_checksum| 日志UUID+描述符块的校验和，此字段设置为零。|
+| `0x0` | `__be32` | `t_checksum` | 日志UUID+描述符块的校验和，此字段设置为零。|
 
 ### 3.6.6. 数据块
 
@@ -525,9 +569,9 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 
 | 偏移量 | 类型 | 名称 | 描述 |
 | ----- | ---- | ---- | ----- |
-| 0x0 | journal_header_t | r_header | 通用块头。|
-| 0xC | __be32| r_count | 此块中使用的字节数。|
-| 0x10 | __be32或__be64 | blocks[0] | 要撤销的块。|
+| `0x0` | `journal_header_t` | `r_header` | 通用块头。|
+| `0xC` | `__be32` | `r_count` | 此块中使用的字节数。|
+| `0x10` | `__be32`或`__be64` | `blocks[0]` | 要撤销的块。|
 
 在`r_count`之后是一个线性数组，包含由此事务有效撤销的块号。如果超级块公布64位块号支持，则每个块号的大小为8字节，否则为4字节。
 
@@ -535,7 +579,7 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 
 | 偏移量 | 类型 | 名称 | 描述 |
 | ----- | ---- | ---- | ----- |
-| 0x0 | __be32 | r_checksum | 日志UUID+撤销块的校验和 |
+| `0x0` | `__be32` | `r_checksum` | 日志UUID+撤销块的校验和 |
 
 ### 3.6.8. 提交块
 
@@ -545,13 +589,13 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 
 |偏移量|类型|名称|描述符|
 | ----- | ---- | ---- | ----- |
-| 0x0 | journal_header_s | (开放编码) | 通用块头。|
-| 0xC | unsigned char | h_chksum_type | 用于验证事务中数据块完整性的校验和类型。参见jbd2_checksum_type了解更多信息。|
-| 0xD | unsigned char | h_chksum_size | 校验和使用的字节数。很可能是4。|
-| 0xE | unsigned char | h_padding[2] | | 
-| 0x10 | __be32 | h_chksum[JBD2_CHECKSUM_BYTES] | 32字节的空间用于存储校验和。如果设置了JBD2_FEATURE_INCOMPAT_CSUM_V2或JBD2_FEATURE_INCOMPAT_CSUM_V3，则第一个__be32是日志UUID和整个提交块的校验和，此字段为零。如果设置了JBD2_FEATURE_COMPAT_CHECKSUM，则第一个__be32是已写入事务的所有块的crc32。|
-| 0x30 | __be64 | h_commit_sec | 事务提交的时间，以纪元以来的秒数表示。|
-| 0x38 | __be32 | h_commit_nsec | 上述时间戳的纳秒分量。|
+| `0x0` | `journal_header_s` | (开放编码) | 通用块头。|
+| `0xC` | `unsigned char` | h_chk`sum_type | 用于验证事务中数据块完整性的校验和类型。参见jbd2_checksum_type了解更多信息。|
+| `0xD` | `unsigned char` | `h_chksum_size` | 校验和使用的字节数。很可能是4。|
+| `0xE` | `unsigned char` | `h_padding[2]` | | 
+| `0x10` | `__be32` | `h_chksum[JBD2_CHECKSUM_BYTES]` | 32字节的空间用于存储校验和。如果设置了`JBD2_FEATURE_INCOMPAT_CSUM_V2`或`JBD2_FEATURE_INCOMPAT_CSUM_V3`，则第一个`__be32`是日志UUID和整个提交块的校验和，此字段为零。如果设置了`JBD2_FEATURE_COMPAT_CHECKSUM`，则第一个__be32是已写入事务的所有块的crc32。|
+| `0x30` | `__be64` | `h_commit_sec` | 事务提交的时间，以纪元以来的秒数表示。|
+| `0x38` | `__be32` | `h_commit_nsec` | 上述时间戳的纳秒分量。|
 
 ### 3.6.9. 快速提交
 
@@ -559,13 +603,13 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 
 | 标签 | 含义 | 值结构 | 描述 |
 | --- | ---- | ------ | ---- |
-| EXT4_FC_TAG_HEAD | 快速提交区域头 | struct ext4_fc_head | 存储应在其后应用这些快速提交的事务的TID。|
-| EXT4_FC_TAG_ADD_RANGE | 向inode添加范围 | struct ext4_fc_add_range | 存储inode号和要添加到此inode中的范围|
-| EXT4_FC_TAG_DEL_RANGE | 从inode中删除逻辑偏移 | struct ext4_fc_del_range | 存储inode号和需要删除的逻辑偏移范围|
-| EXT4_FC_TAG_CREAT | 为新创建的文件创建目录条目 | struct ext4_fc_dentry_info | 存储父inode号、inode号以及新创建文件的目录条目| 
-| EXT4_FC_TAG_LINK | 将目录条目链接到inodestruct | ext4_fc_dentry_info | 存储父inode号、inode号和目录条目
-| EXT4_FC_TAG_UNLINK | 取消链接inode的目录条目 | struct ext4_fc_dentry_info | 存储父inode号、inode号和目录条目EXT4_FC_TAG_PAD填充（未使用区域）无快速提交区域中未使用的字节。|
-| EXT4_FC_TAG_TAIL | 标记快速提交的结束 | struct ext4_fc_tail | 存储提交的TID，此标签表示结束的快速提交的CRC |
+| `EXT4_FC_TAG_HEAD` | 快速提交区域头 | `struct ext4_fc_head` | 存储应在其后应用这些快速提交的事务的TID。|
+| `EXT4_FC_TAG_ADD_RANGE` | 向inode添加范围 | `struct ext4_fc_add_range` | 存储inode号和要添加到此inode中的范围|
+| `EXT4_FC_TAG_DEL_RANGE` | 从inode中删除逻辑偏移 | `struct ext4_fc_del_range` | 存储inode号和需要删除的逻辑偏移范围|
+| `EXT4_FC_TAG_CREAT` | 为新创建的文件创建目录条目 | `struct ext4_fc_dentry_info` | 存储父inode号、inode号以及新创建文件的目录条目| 
+| `EXT4_FC_TAG_LINK` | 将目录条目链接到inodestruct | `ext4_fc_dentry_info` | 存储父inode号、inode号和目录条目
+| `EXT4_FC_TAG_UNLINK` | 取消链接inode的目录条目 | `struct ext4_fc_dentry_info` | 存储父inode号、inode号和目录条目EXT4_FC_TAG_PAD填充（未使用区域）无快速提交区域中未使用的字节。|
+| `EXT4_FC_TAG_TAIL` | 标记快速提交的结束 | `struct ext4_fc_tail` | 存储提交的TID，此标签表示结束的快速提交的CRC |
 
 ### 3.6.10. 快速提交重放幂等性
 
@@ -614,8 +658,8 @@ jbd2中的所有字段都以大端序写入磁盘。这与ext4相反。
 
 | 偏移量 | 类型 | 名称 | 描述 |
 | ----- | ---- | ---- | ---- |
-| 0x0 | __le32条目数组 | 孤儿inode条目 | 每个__le32条目要么为空（0），要么包含孤儿inode的inode号。|
-| blocksize-8 | __le32 | ob_magic | 存储在孤儿块尾部的魔术值(0x0b10ca04)|
-| blocksize-4 | __le32 | ob_checksum | 孤儿块的校验和。|
+| `0x0` | __le32条目数组 | 孤儿inode条目 | 每个__le32条目要么为空（0），要么包含孤儿inode的inode号。|
+| `blocksize-8` | `__le32` | `ob_magic` | 存储在孤儿块尾部的魔术值(0x0b10ca04)|
+| `blocksize-4` | `__le32` | `ob_checksum` | 孤儿块的校验和。|
 
 当具有孤儿文件特性的文件系统可写挂载时，我们在超级块中设置`RO_COMPAT_ORPHAN_PRESENT`特性，以指示可能有有效的孤儿条目。如果在挂载文件系统时看到此特性，我们读取整个孤儿文件并像往常一样处理所有找到的孤儿inode。当干净地卸载文件系统时，我们删除`RO_COMPAT_ORPHAN_PRESENT`特性，以避免不必要地扫描孤儿文件，并使文件系统与旧内核完全兼容。

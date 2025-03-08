@@ -10,37 +10,37 @@ inode表是`struct ext4_inode`的线性数组。该表的大小足以存储至�
 
 inode校验和是针对FS UUID、inode编号和inode结构本身计算的。
 
-inode表条目在struct ext4_inode中布局如下：
+inode表条目在`struct ext4_inode`中布局如下：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ----- | ---- | ---- | ---- |
-| 0x0 | __le16 | i_mode | 文件模式。参见下面的i_mode表。|
-| 0x2 | __le16 | i_uid | 所有者UID的低16位。|
-| 0x4 | __le32 | i_size_lo | 以字节为单位的大小的低32位。|
-| 0x8 | __le32 | i_atime | 最后访问时间，从纪元开始的秒数。但是，如果设置了EA_INODE inode标志，此inode存储扩展属性值，此字段包含值的校验和。|
-| 0xC | __le32 | i_ctime | 最后inode更改时间，从纪元开始的秒数。但是，如果设置了EA_INODE inode标志，此inode存储扩展属性值，此字段包含属性值引用计数的低32位。|
-| 0x10 | __le32 | i_mtime | 最后数据修改时间，从纪元开始的秒数。但是，如果设置了EA_INODE inode标志，此inode存储扩展属性值，此字段包含拥有扩展属性的inode编号。|
-| 0x14 | __le32 | i_dtime | 删除时间，从纪元开始的秒数。|
-| 0x18 | __le16 | i_gid | GID的低16位。|
-| 0x1A | __le16 | i_links_count | 硬链接计数。通常，ext4不允许一个inode有超过65,000个硬链接。这适用于文件和目录，这意味着一个目录中不能有超过64,998个子目录（每个子目录的'..'条目计为一个硬链接，目录本身的'.'条目也是）。启用DIR_NLINK功能后，ext4通过将此字段设置为1来支持超过64,998个子目录，表示硬链接数未知。
-| 0x1C | __le32 | i_blocks_lo | "块"计数的低32位。如果文件系统上未设置huge_file特性标志，则文件占用i_blocks_lo个512字节块。如果设置了huge_file且inode.i_flags中未设置EXT4_HUGE_FILE_FL，则文件占用i_blocks_lo + (i_blocks_hi << 32)个512字节块。如果设置了huge_file且inode.i_flags中设置了EXT4_HUGE_FILE_FL，则此文件占用(i_blocks_lo + i_blocks_hi << 32)个文件系统块。|
-| 0x20 | __le32 | i_flags | Inode标志。参见下面的i_flags表。0x244 bytesi_osd1有关更多详情，请参见i_osd1表。0x2860 bytesi_block[EXT4_N_BLOCKS=15]块映射或区段树。请参阅"inode.i_block的内容"部分。
-| 0x64 | __le32 | i_generation | 文件版本（用于NFS）。|
-| 0x68 | __le32 | i_file_acl_lo | 扩展属性块的低32位。ACL当然是多种可能的扩展属性之一；我认为这个字段的名称是由于扩展属性的第一次使用是用于ACL。|
-| 0x6C | __le32 | i_size_high | i_dir_acl文件/目录大小的高32位。在ext2/3中，此字段被命名为i_dir_acl，尽管它通常设置为零并且从未使用过。|
-| 0x70 | __le32 | i_obso_faddr| （已废弃）片段地址。|
-| 0x74 | 12 bytes | i_osd2 | 有关更多详情，请参见`i_osd2`表。|
-| 0x80 | __le16 | i_extra_isize | 此inode的大小 - 128。或者说，超出原始ext2 inode的扩展inode字段的大小，包括此字段。|
-| 0x82 | __le16 | i_checksum_hiinode | 校验和的高16位。|
-| 0x84 | __le32 | i_ctime_extra | 额外的更改时间位。这提供亚秒精度。请参阅Inode时间戳部分。|
-| 0x88 | __le32 | i_mtime_extra | 额外的修改时间位。这提供亚秒精度。|
-| 0x8C | __le32 | i_atime_extra | 额外的访问时间位。这提供亚秒精度。|
-| 0x90 | __le32 | i_crtime | 文件创建时间，从纪元开始的秒数。| 
-| 0x94 | __le32 | i_crtime_extra | 额外的文件创建时间位。这提供亚秒精度。|
-| 0x98 | __le32 | i_version_hi | 版本号的高32位。|
-| 0x9C | __le32 | i_projid | 项目ID。|
+| `0x0` | `__le16` | `i_mode` | 文件模式。参见下面的i_mode表。|
+| `0x2` | `__le16` | `i_uid` | 所有者UID的低16位。|
+| `0x4` | `__le32` | `i_size_lo` | 以字节为单位的大小的低32位。|
+| `0x8` | `__le32` | `i_atime` | 最后访问时间，从纪元开始的秒数。但是，如果设置了EA_INODE inode标志，此inode存储扩展属性值，此字段包含值的校验和。|
+| `0xC` | `__le32` | `i_ctime` | 最后inode更改时间，从纪元开始的秒数。但是，如果设置了EA_INODE inode标志，此inode存储扩展属性值，此字段包含属性值引用计数的低32位。|
+| `0x10` | `__le32` | `i_mtime` | 最后数据修改时间，从纪元开始的秒数。但是，如果设置了EA_INODE inode标志，此inode存储扩展属性值，此字段包含拥有扩展属性的inode编号。|
+| `0x14` | `__le32` | `i_dtime` | 删除时间，从纪元开始的秒数。|
+| `0x18` | `__le16` | `i_gid` | GID的低16位。|
+| `0x1A` | `__le16` | `i_links_count` | 硬链接计数。通常，ext4不允许一个inode有超过65,000个硬链接。这适用于文件和目录，这意味着一个目录中不能有超过64,998个子目录（每个子目录的'..'条目计为一个硬链接，目录本身的'.'条目也是）。启用DIR_NLINK功能后，ext4通过将此字段设置为1来支持超过64,998个子目录，表示硬链接数未知。
+| `0x1C` | `__le32` | `i_blocks_lo` | "块"计数的低32位。如果文件系统上未设置huge_file特性标志，则文件占用i_blocks_lo个512字节块。如果设置了huge_file且inode.i_flags中未设置EXT4_HUGE_FILE_FL，则文件占用i_blocks_lo + (i_blocks_hi << 32)个512字节块。如果设置了huge_file且inode.i_flags中设置了EXT4_HUGE_FILE_FL，则此文件占用(i_blocks_lo + i_blocks_hi << 32)个文件系统块。|
+| `0x20` | `__le32` | `i_flags` | Inode标志。参见下面的i_flags表。0x244 bytesi_osd1有关更多详情，请参见i_osd1表。0x2860 bytesi_block[EXT4_N_BLOCKS=15]块映射或区段树。请参阅"inode.i_block的内容"部分。
+| `0x64` | `__le32` | `i_generation` | 文件版本（用于NFS）。|
+| `0x68` | `__le32` | `i_file_acl_lo` | 扩展属性块的低32位。ACL当然是多种可能的扩展属性之一；我认为这个字段的名称是由于扩展属性的第一次使用是用于ACL。|
+| `0x6C` | `__le32` | `i_size_high` | i_dir_acl文件/目录大小的高32位。在ext2/3中，此字段被命名为i_dir_acl，尽管它通常设置为零并且从未使用过。|
+| `0x70` | `__le32` | `i_obso_faddr`| （已废弃）片段地址。|
+| `0x74` | 12 bytes | `i_osd2` | 有关更多详情，请参见`i_osd2`表。|
+| `0x80` | `__le16` | `i_extra_isize` | 此inode的大小 - 128。或者说，超出原始ext2 inode的扩展inode字段的大小，包括此字段。|
+| `0x82` | `__le16` | `i_checksum_hiinode` | 校验和的高16位。|
+| `0x84` | `__le32` | `i_ctime_extra` | 额外的更改时间位。这提供亚秒精度。请参阅Inode时间戳部分。|
+| `0x88` | `__le32` | `i_mtime_extra` | 额外的修改时间位。这提供亚秒精度。|
+| `0x8C` | `__le32` | `i_atime_extra` | 额外的访问时间位。这提供亚秒精度。|
+| `0x90` | `__le32` | `i_crtime` | 文件创建时间，从纪元开始的秒数。| 
+| `0x94` | `__le32` | `i_crtime_extra` | 额外的文件创建时间位。这提供亚秒精度。|
+| `0x98` | `__le32` | `i_version_hi` | 版本号的高32位。|
+| `0x9C` | `__le32` | `i_projid` | 项目ID。|
 
-i_mode值是以下标志的组合：
+`i_mode`值是以下标志的组合：
 
 | 值 | 描述 |
 | -- | --- |
@@ -69,93 +69,93 @@ i_mode值是以下标志的组合：
 
 | 值 | 描述 |
 | -- | ---- |
-| `0x1` | 此文件需要安全删除(EXT4_SECRM_FL)。（未实现）| |
-| `0x2` | 此文件应该被保留，如果需要取消删除(EXT4_UNRM_FL)。（未实现） |
-| `0x4` | 文件已压缩(EXT4_COMPR_FL)。（未真正实现） |
-| `0x8` | 对文件的所有写入必须同步(EXT4_SYNC_FL)。 |
-| `0x10` | 文件不可变(EXT4_IMMUTABLE_FL)。 |
-| `0x20` | 文件只能追加(EXT4_APPEND_FL)。 |
-| `0x40` | dump(1)实用程序不应该转储此文件(EXT4_NODUMP_FL)。 |
-| `0x80` | 不更新访问时间(EXT4_NOATIME_FL)。 |
-| `0x100` | 脏压缩文件(EXT4_DIRTY_FL)。（未使用） |
-| `0x200` | 文件有一个或多个压缩集群(EXT4_COMPRBLK_FL)。（未使用） |
-| `0x400` | 不压缩文件(EXT4_NOCOMPR_FL)。（未使用） |
-| `0x800` | 加密inode(EXT4_ENCRYPT_FL)。此位值以前是EXT4_ECOMPR_FL（压缩错误），从未使用过。 |
-| `0x1000` | 目录有哈希索引(EXT4_INDEX_FL)。 |
-| `0x2000` | AFS魔术目录(EXT4_IMAGIC_FL)。 |
-| `0x4000` | 文件数据必须始终通过日志写入(EXT4_JOURNAL_DATA_FL)。 |
-| `0x8000` | 文件尾部不应合并(EXT4_NOTAIL_FL)。（ext4未使用） |
-| `0x10000` | 所有目录条目数据都应同步写入（见dirsync）(EXT4_DIRSYNC_FL)。 |
-| `0x20000` | 目录层次结构的顶部(EXT4_TOPDIR_FL)。 |
-| `0x40000` | 这是一个巨大的文件(EXT4_HUGE_FILE_FL)。 |
-| `0x80000` | Inode使用区段(EXT4_EXTENTS_FL)。 |
-| `0x100000` | 完整性保护文件(EXT4_VERITY_FL)。 |
-| `0x200000` | Inode在其数据块中存储大型扩展属性值(EXT4_EA_INODE_FL)。 |
-| `0x400000` | 此文件在EOF之后有分配的块(EXT4_EOFBLOCKS_FL)。（已弃用） |
-| `0x01000000` | Inode是快照(EXT4_SNAPFILE_FL)。（不在主线中） |
-| `0x04000000` | 快照正在被删除(EXT4_SNAPFILE_DELETED_FL)。（不在主线中） |
-| `0x08000000` | 快照收缩已完成(EXT4_SNAPFILE_SHRUNK_FL)。（不在主线中） |
-| `0x10000000` | Inode有内联数据(EXT4_INLINE_DATA_FL)。 |
-| `0x20000000` | 创建具有相同项目ID的子项(EXT4_PROJINHERIT_FL)。 |
-| `0x80000000` | 保留给ext4库(EXT4_RESERVED_FL)。 |
+| `0x1` | 此文件需要安全删除(`EXT4_SECRM_FL`)。（未实现）| |
+| `0x2` | 此文件应该被保留，如果需要取消删除(`EXT4_UNRM_FL`)。（未实现） |
+| `0x4` | 文件已压缩(`EXT4_COMPR_FL`)。（未真正实现） |
+| `0x8` | 对文件的所有写入必须同步(`EXT4_SYNC_FL`)。 |
+| `0x10` | 文件不可变(`EXT4_IMMUTABLE_FL`)。 |
+| `0x20` | 文件只能追加(`EXT4_APPEND_FL`)。 |
+| `0x40` | dump(1)实用程序不应该转储此文件(`EXT4_NODUMP_FL`)。 |
+| `0x80` | 不更新访问时间(`EXT4_NOATIME_FL`)。 |
+| `0x100` | 脏压缩文件(`EXT4_DIRTY_FL`)。（未使用） |
+| `0x200` | 文件有一个或多个压缩集群(`EXT4_COMPRBLK_FL`)。（未使用） |
+| `0x400` | 不压缩文件(`EXT4_NOCOMPR_FL`)。（未使用） |
+| `0x800` | 加密inode(`EXT4_ENCRYPT_FL`)。此位值以前是EXT4_ECOMPR_FL（压缩错误），从未使用过。 |
+| `0x1000` | 目录有哈希索引(`EXT4_INDEX_FL`)。 |
+| `0x2000` | AFS魔术目录(`EXT4_IMAGIC_FL`)。 |
+| `0x4000` | 文件数据必须始终通过日志写入(`EXT4_JOURNAL_DATA_FL`)。 |
+| `0x8000` | 文件尾部不应合并(`EXT4_NOTAIL_FL`)。（ext4未使用） |
+| `0x10000` | 所有目录条目数据都应同步写入（见dirsync）(`EXT4_DIRSYNC_FL`)。 |
+| `0x20000` | 目录层次结构的顶部(`EXT4_TOPDIR_FL`)。 |
+| `0x40000` | 这是一个巨大的文件(`EXT4_HUGE_FILE_FL`)。 |
+| `0x80000` | Inode使用区段(`EXT4_EXTENTS_FL`)。 |
+| `0x100000` | 完整性保护文件(`EXT4_VERITY_FL`)。 |
+| `0x200000` | Inode在其数据块中存储大型扩展属性值(`EXT4_EA_INODE_FL`)。 |
+| `0x400000` | 此文件在EOF之后有分配的块(`EXT4_EOFBLOCKS_FL`)。（已弃用） |
+| `0x01000000` | Inode是快照(`EXT4_SNAPFILE_FL`)。（不在主线中） |
+| `0x04000000` | 快照正在被删除(`EXT4_SNAPFILE_DELETED_FL`)。（不在主线中） |
+| `0x08000000` | 快照收缩已完成(`EXT4_SNAPFILE_SHRUNK_FL`)。（不在主线中） |
+| `0x10000000` | Inode有内联数据(`EXT4_INLINE_DATA_FL`)。 |
+| `0x20000000` | 创建具有相同项目ID的子项(`EXT4_PROJINHERIT_FL`)。 |
+| `0x80000000` | 保留给ext4库(`EXT4_RESERVED_FL`)。 |
 
 聚合标志：
 
 | 值 | 描述 |
 | -- | --- |
 | `0x705BDFFF` | 用户可见标志。|
-| `0x604BC0FF` | 用户可修改标志。请注意，虽然可以使用setattr设置EXT4_JOURNAL_DATA_FL和EXT4_EXTENTS_FL，但它们不在内核的EXT4_FL_USER_MODIFIABLE掩码中，因为它需要以特殊方式处理这些标志的设置，它们被从直接保存到i_flags的标志集中掩盖。|
+| `0x604BC0FF` | 用户可修改标志。请注意，虽然可以使用setattr设置EXT4_JOURNAL_DATA_FL和EXT4_EXTENTS_FL，<br>但它们不在内核的EXT4_FL_USER_MODIFIABLE掩码中，因为它需要以特殊方式处理这些标志的设置，它们被从直接保存到i_flags的标志集中掩盖。|
 
-osd1字段根据创建者有不同的含义：
+`osd1`字段根据创建者有不同的含义：
 
 Linux:
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ----- | ---- | ---- | ---- |
-| `0x0` | __le32 | l_i_version | Inode版本。但是，如果设置了EA_INODE inode标志，此inode存储扩展属性值，此字段包含属性值引用计数的高32位。|
+| `0x0` | `__le32` | `l_i_version` | Inode版本。但是，如果设置了EA_INODE inode标志，此inode存储扩展属性值，此字段包含属性值引用计数的高32位。|
 
 Hurd:
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ----- | ---- | ---- | ---- |
-| `0x0` | __le32 | h_i_translator | ?? |
+| `0x0` | `__le32` | `h_i_translator` | ?? |
 
 Masix:
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ----- | ---- | ---- | ---- |
-| `0x0` | __le32 | m_i_reserved | ?? |
+| `0x0` | `__le32` | `m_i_reserved` | ?? |
 
 osd2字段根据文件系统创建者有不同的含义：
 
-Linux:
+**Linux**:
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ----- | ---- | ---- | ---- |
-| `0x0` | __le16 | l_i_blocks_high | 块计数的高16位。请参阅附在i_blocks_lo上的注释。| 
-| `0x2` | __le16 | l_i_file_acl_high | 扩展属性块的高16位（历史上是文件ACL位置）。请参阅下面的扩展属性部分。| 
-| `0x4` | __le16 | l_i_uid_high | 所有者UID的高16位。| 
-| `0x6` | __le16 | l_i_gid_high | GID的高16位。| 
-| `0x8` | __le16 | l_i_checksum_lo | inode校验和的低16位。|
-| `0xA` | __le16 | l_i_reserved | 未使用。|
+| `0x0` | `__le16` | `l_i_blocks_high` | 块计数的高16位。请参阅附在`i_blocks_lo`上的注释。| 
+| `0x2` | `__le16` | `l_i_file_acl_high` | 扩展属性块的高16位（历史上是文件ACL位置）。请参阅下面的扩展属性部分。| 
+| `0x4` | `__le16` | `l_i_uid_high` | 所有者UID的高16位。| 
+| `0x6` | `__le16` | `l_i_gid_high` | GID的高16位。| 
+| `0x8` | `__le16` | `l_i_checksum_lo` | inode校验和的低16位。|
+| `0xA` | `__le16` | `l_i_reserved` | 未使用。|
 
-Hurd:
-
-| 偏移量 | 大小 | 名称 | 描述 |
-| ----- | ---- | ---- | ---- |
-| `0x0` | __le16 | h_i_reserved1 | ?? |
-| `0x2` | __u16 | h_i_mode_high | 文件模式的高16位。|
-| `0x4` | __le16 | h_i_uid_high | 所有者UID的高16位。|
-| `0x6` | __le16 | h_i_gid_high | GID的高16位。|
-| `0x8` | __u32 | h_i_author | 作者代码？|
-
-Masix:
+**Hurd**:
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ----- | ---- | ---- | ---- |
-| `0x0` | __le16 | h_i_reserved1 | ?? |
-| `0x2` | __u16 | m_i_file_acl_high | 扩展属性块的高16位（历史上是文件ACL位置）。| 
-| `0x4` | __u32 | m_i_reserved2\[2\] | ?? |
+| `0x0` | `__le16` | `h_i_reserved1` | ?? |
+| `0x2` | `__u16` | `h_i_mode_high` | 文件模式的高16位。|
+| `0x4` | `__le16` | `h_i_uid_high` | 所有者UID的高16位。|
+| `0x6` | `__le16` | `h_i_gid_high` | GID的高16位。|
+| `0x8` | `__u32` | `h_i_author` | 作者代码？|
+
+**Masix**:
+
+| 偏移量 | 大小 | 名称 | 描述 |
+| ----- | ---- | ---- | ---- |
+| `0x0` | `__le16` | `h_i_reserved1` | ?? |
+| `0x2` | `__u16` | `m_i_file_acl_high` | 扩展属性块的高16位（历史上是文件ACL位置）。| 
+| `0x4` | `__u32` | m`_i_reserved2[2]` | ?? |
 
 ### 4.1.1. Inode大小
 
@@ -224,7 +224,7 @@ Masix:
 | 间接块偏移量 | 指向何处 |
 | ----------- | ------- |
 | 0到（$block_size / 4） | 直接映射到（$block_size / 4）个块（如果是4KiB块，则为1024）|
-| 14 | 三重间接块：（文件块（$block_size / 4）^ 2 +（$block_size / 4）+ 12到（$block_size / 4）^ 3 +（$block_size / 4）^ 2 +（$block_size / 4）+ 12，或者如果是4KiB块，则为1049612到1074791436）|
+| 14 | 三重间接块：（文件块（$block_size / 4）^ 2 +（$block_size / 4）+ 12到（$block_size / 4）^ 3 +（$block_size / 4）^ 2 +（$block_size / 4）+ 12，<br>或者如果是4KiB块，则为1049612到1074791436）|
 
 | 三重间接块偏移量 | 指向何处 |
 | ----------- | ------- |
@@ -269,43 +269,65 @@ Masix:
 
 在ext4中，文件到逻辑块映射已被区段树替代。在旧方案下，分配1,000个连续的块需要间接块来映射所有1,000个条目；使用区段，映射减少到具有ee_len = 1000的单个struct ext4_extent。如果启用了flex_bg，可以使用单个区段分配非常大的文件，这在元数据块使用方面有相当大的减少，并且在磁盘效率方面有一些改进。inode必须设置区段标志（0x80000）才能使用此功能。
 
-区段被组织为树。树的每个节点都以`struct ext4_extent_header`开始。如果节点是内部节点（eh.eh_depth > 0），头部后面跟着eh.eh_entries个`struct ext4_extent_idx`实例；这些索引条目中的每一个都指向包含区段树中更多节点的块。如果节点是叶节点（eh.eh_depth == 0），则头部后面跟着`eh.eh_entries`个`struct ext4_extent`实例；这些实例指向文件的数据块。区段树的根节点存储在`inode.i_block`中，这允许在不使用额外元数据块的情况下记录前四个区段。
+区段被组织为树。树的每个节点都以`struct ext4_extent_header`开始。如果节点是内部节点（`eh.eh_depth > 0`），头部后面跟着`eh.eh_entries`个`struct ext4_extent_idx`实例；这些索引条目中的每一个都指向包含区段树中更多节点的块。如果节点是叶节点（`eh.eh_depth == 0`），则头部后面跟着`eh.eh_entries`个`struct ext4_extent`实例；这些实例指向文件的数据块。区段树的根节点存储在`inode.i_block`中，这允许在不使用额外元数据块的情况下记录前四个区段。
 
 区段树头记录在`struct ext4_extent_header`中，长度为12字节：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __le16 | eh_magic | 魔术数字，0xF30A。|
-| 0x2 | __le16 | eh_entries | 头部后面有效条目的数量。|
-| 0x4 | __le16 | eh_max | 可以跟在头部后面的最大条目数。|
-| 0x6 | __le16 | eh_depth | 此区段节点在区段树中的深度。0 = 此区段节点指向数据块；否则，此区段节点指向其他区段节点。区段树最多可以有5级深：逻辑块号最多为2^32，满足4*(((blocksize - 12)/12)^n) >= 2^32的最小n是5。|
-| 0x8 | __le32 | eh_generation | 树的生成号。（被Lustre使用，但不是标准ext4）。|
+| `0x0` | `__le16` | `eh_magic` | 魔术数字，0xF30A。|
+| `0x2` | `__le16` | `eh_entries` | 头部后面有效条目的数量。|
+| `0x4` | `__le16` | `eh_max` | 可以跟在头部后面的最大条目数。|
+| `0x6` | `__le16` | `eh_depth` | 此区段节点在区段树中的深度。0 = 此区段节点指向数据块；否则，此区段节点指向其他区段节点。<br>区段树最多可以有5级深：逻辑块号最多为2^32，满足4*(((blocksize - 12)/12)^n) >= 2^32的最小n是5。|
+| `0x8` | `__le32` | `eh_generation` | 树的生成号。（被Lustre使用，但不是标准ext4）。|
 
 区段树的内部节点，也称为索引节点，记录为`struct ext4_extent_idx`，长度为12字节：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __le32 | ei_block | 该索引节点覆盖从'block'开始的文件块。|
-| 0x4 | __le32 | ei_leaf_lo | 树中下一级区段节点的块号的低32位。所指向的树节点可以是另一个内部节点或叶节点，如下所述。|
-| 0x8 | __le16 | ei_leaf_hi | 前一个字段的高16位。|
-| 0xA | __u16 | ei_unused | |
+| `0x0` | `__le32` | `ei_block` | 该索引节点覆盖从'block'开始的文件块。|
+| `0x4` | `__le32` | `ei_leaf_lo` | 树中下一级区段节点的块号的低32位。所指向的树节点可以是另一个内部节点或叶节点，如下所述。|
+| `0x8` | `__le16` | `ei_leaf_hi` | 前一个字段的高16位。|
+| `0xA` | `__u16` | `ei_unused` | |
 
-区段树的叶节点记录为struct ext4_extent，也是12字节长：
+区段树的叶节点记录为`struct ext4_extent`，也是12字节长：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __le32 | ee_block | 此区段覆盖的第一个文件块号。|
-| 0x4 | __le16 | ee_len | 区段覆盖的块数。如果此字段的值 <= 32768，则区段已初始化。如果字段值 > 32768，则区段未初始化，实际区段长度为ee_len - 32768。因此，初始化区段的最大长度为32768块，未初始化区段的最大长度为32767。|
-| 0x6 | __le16 | ee_start_hi | 此区段指向的块号的高16位。|
-| 0x8 | __le32 | ee_start_lo | 此区段指向的块号的低32位。|
+| `0x0` | `__le32` | `ee_block` | 此区段覆盖的第一个文件块号。|
+| `0x4` | `__le16` | `ee_len` | 区段覆盖的块数。如果此字段的值 <= 32768，则区段已初始化。如果字段值 > 32768，则区段未初始化，<br>实际区段长度为ee_len - 32768。因此，初始化区段的最大长度为32768块，未初始化区段的最大长度为32767。|
+| `0x6` | `__le16` | `ee_start_hi` | 此区段指向的块号的高16位。|
+| `0x8` | `__le32` | `ee_start_lo` | 此区段指向的块号的低32位。|
 
 在引入元数据校验和之前，区段头+区段条目总是在每个区段树数据块的末尾留下至少4字节的未分配空间（因为(2^x % 12) >= 4）。因此，32位校验和被插入到这个空间中。inode中的4个区段不需要校验和，因为inode已经进行了校验和。校验和是针对FS UUID、inode号、inode生成号和直到（但不包括）校验和本身的整个区段块计算的。
 
-struct ext4_extent_tail长4字节：
+`struct ext4_extent_tail`长4字节：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __le32 | eb_checksum | 区段块的校验和，crc32c(uuid+inum+igeneration+extentblock)|
+| `0x0` | `__le32` | `eb_checksum` | 区段块的校验和，crc32c(uuid+inum+igeneration+extentblock)|
+
+> **区段树的结构**
+> 
+> 区段树是一个多层次的树状结构：
+> 
+> 1. 树节点开始部分：每个节点以`struct ext4_extent_header`(12字节)开始，包含:
+>    + 魔术数字(0xF30A)
+>    + 有效条目数
+>    + 最大条目数
+>    + 深度标识
+>    + 生成号
+> 
+> 2. 内部节点：如果节点深度>0，头部后跟着多个`struct ext4_extent_idx`条目(每个12字节)
+>    + 每个索引条目指向树中的下一级节点
+>    + 包含起始块号和指向下一级节点的块号
+> 
+> 3. 叶节点：如果节点深度=0，头部后跟着多个`struct ext4_extent`条目(每个12字节)
+>    + 每个条目表示一个连续的块范围(区段)
+>    + 包含起始文件块号、长度和实际物理块号
+>    + 最大可表示32768个连续初始化块或32767个连续未初始化块
+> 
+> 4. 根节点：存储在inode的i_block字段中，无需额外块就能存储前4个区段
 
 ### 4.2.4. 内联数据
 
@@ -319,173 +341,187 @@ struct ext4_extent_tail长4字节：
 
 默认情况下，每个目录在"几乎线性"的数组中列出其条目。我写"几乎"是因为它在内存意义上不是线性数组，因为目录条目不会跨文件系统块分割。因此，更准确地说，目录是一系列数据块，每个块包含目录条目的线性数组。每个块内数组的结束由到达块的末尾表示；块中的最后一个条目的记录长度一直延伸到块的末尾。整个目录的结束当然由到达文件的末尾表示。未使用的目录条目由inode = 0表示。默认情况下，文件系统使用`struct ext4_dir_entry_2`作为目录条目，除非未设置"filetype"特性标志，在这种情况下使用`struct ext4_dir_entry`。
 
-原始目录条目格式是struct ext4_dir_entry，最长263字节，尽管在磁盘上您需要参考dirent.rec_len才能确定。
+原始目录条目格式是`struct ext4_dir_entry`，最长263字节，尽管在磁盘上您需要参考`dirent.rec_len`才能确定。
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __le32 | inode | 此目录条目指向的inode号。|
-| 0x4 | __le16 | rec_len | 此目录条目的长度。必须是4的倍数。|
-| 0x6 | __le16 | name_len | 文件名的长度。|
-| 0x8 | char | name\[EXT4_NAME_LEN\] | 文件名。|
+| `0x0` | `__le32` | `inode` | 此目录条目指向的inode号。|
+| `0x4` | `__le16` | `rec_len` | 此目录条目的长度。必须是4的倍数。|
+| `0x6` | `__le16` | `name_len` | 文件名的长度。|
+| `0x8` | `char` | `name[EXT4_NAME_LEN]` | 文件名。|
 
-由于文件名不能长于255字节，新的目录条目格式缩短了name_len字段，并使用该空间用于文件类型标志，可能是为了避免在目录树遍历期间必须加载每个inode。这种格式是`ext4_dir_entry_2`，最长263字节，尽管在磁盘上您需要参考dirent.rec_len才能确定。
+由于文件名不能长于255字节，新的目录条目格式缩短了`name_len`字段，并使用该空间用于文件类型标志，可能是为了避免在目录树遍历期间必须加载每个inode。这种格式是`ext4_dir_entry_2`，最长263字节，尽管在磁盘上您需要参考`dirent.rec_len`才能确定。
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __le32 | inode | 此目录条目指向的inode号。|
-| 0x4 | __le16 | rec_len | 此目录条目的长度。|
-| 0x6 | __u8 | name_len | 文件名的长度。|
-| 0x7 | __u8 | file_type | 文件类型代码，请参阅下面的ftype表。|
-| 0x8 | char | name\[EXT4_NAME_LEN\] | 文件名。|
+| `0x0` | `__le32` | `inode` | 此目录条目指向的inode号。|
+| `0x4` | `__le16` | `rec_len` | 此目录条目的长度。|
+| `0x6` | `__u8` | `name_len` | 文件名的长度。|
+| `0x7` | `__u8` | `file_type` | 文件类型代码，请参阅下面的ftype表。|
+| `0x8` | `char` | `name[EXT4_NAME_LEN]` | 文件名。|
 
 目录文件类型是以下值之一：
 
 | 值 | 描述 |
-| 0x0 | 未知。|
-| 0x1 | 常规文件。|
-| 0x2 | 目录。|
-| 0x3 | 字符设备文件。|
-| 0x4 | 块设备文件。|
-| 0x5 | FIFO。|
-|0x6 | Socket。|
-|0x7 | 符号链接。|
+| -- | --- |
+| `0x0` | 未知。|
+| `0x1` | 常规文件。|
+| `0x2` | 目录。|
+| `0x3` | 字符设备文件。|
+| `0x4` | 块设备文件。|
+| `0x5` | FIFO。|
+| `0x6` | Socket。|
+| `0x7` | 符号链接。|
 
-为了支持既加密又区分大小写的目录，我们还必须在目录条目中包含哈希信息。我们将ext4_extended_dir_entry_2附加到ext4_dir_entry_2后面，dot和dotdot条目除外，它们保持不变。该结构紧跟在name之后，并包含在rec_len列出的大小中。如果目录条目使用此扩展，它最长可达271字节。
+为了支持既加密又区分大小写的目录，我们还必须在目录条目中包含哈希信息。我们将`ext4_extended_dir_entry_2`附加到`ext4_dir_entry_2`后面，dot和dotdot条目除外，它们保持不变。该结构紧跟在name之后，并包含在rec_len列出的大小中。如果目录条目使用此扩展，它最长可达271字节。
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __le32 | hash | 目录名的哈希| 
-| 0x4 | __le32 | minor_hash | 目录名的次要哈希|
+| `0x0` | `__le32` | `hash` | 目录名的哈希| 
+| `0x4` | `__le32` | `minor_hash` | 目录名的次要哈希|
 
-为了向这些经典目录块添加校验和，在每个叶块的末尾放置了一个伪struct ext4_dir_entry来保存校验和。目录条目长12字节。inode号和name_len字段设置为零，以欺骗旧软件忽略一个看似空的目录条目，校验和存储在通常放置名称的位置。该结构是struct ext4_dir_entry_tail：
+为了向这些经典目录块添加校验和，在每个叶块的末尾放置了一个伪struct ext4_dir_entry来保存校验和。目录条目长12字节。`inode`号和`name_len`字段设置为零，以欺骗旧软件忽略一个看似空的目录条目，校验和存储在通常放置名称的位置。该结构是`struct ext4_dir_entry_tail`：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __le32 | det_reserved_zero1 | inode号，必须为零。|
-| 0x4 | __le16 | det_rec_len | 此目录条目的长度，必须为12。|
-| 0x6 | __u8 | det_reserved_zero2 | 文件名的长度，必须为零。|
-| 0x7 | __u8 | det_reserved_ft | 文件类型，必须为0xDE。|
-| 0x8 | __le32 | det_checksum | 目录叶块校验和。|
+| `0x0` | `__le32` | `det_reserved_zero1` | inode号，必须为零。|
+| `0x4` | `__le16` | `det_rec_len` | 此目录条目的长度，必须为12。|
+| `0x6` | `__u8` | `det_reserved_zero2` | 文件名的长度，必须为零。|
+| `0x7` | `__u8` | `det_reserved_ft` | 文件类型，必须为0xDE。|
+| `0x8` | `__le32` | `det_checksum` | 目录叶块校验和。|
 
 叶目录块校验和是针对FS UUID、目录的inode号、目录的inode生成号和直到（但不包括）伪目录条目的整个目录条目块计算的。
 
 ### 4.3.2. 哈希树目录
 
-目录条目的线性数组对性能不是很好，所以在ext3中添加了一个新功能，提供更快（但特殊）的平衡树，以目录条目名称的哈希为键。如果在inode中设置了EXT4_INDEX_FL (0x1000)标志，此目录使用哈希btree（htree）来组织和查找目录条目。为了向后只读兼容ext2，这棵树实际上隐藏在目录文件内，伪装成"空"目录数据块！之前曾说过，线性目录条目表的结束是由指向inode 0的条目表示的；这被（滥）用来欺骗旧的线性扫描算法，使其认为目录块的其余部分是空的，这样它就会继续前进。
+目录条目的线性数组对性能不是很好，所以在ext3中添加了一个新功能，提供更快（但特殊）的平衡树，以目录条目名称的哈希为键。如果在inode中设置了`EXT4_INDEX_FL` (0x1000)标志，此目录使用哈希btree（htree）来组织和查找目录条目。为了向后只读兼容ext2，这棵树实际上隐藏在目录文件内，伪装成"空"目录数据块！之前曾说过，线性目录条目表的结束是由指向inode 0的条目表示的；这被（滥）用来欺骗旧的线性扫描算法，使其认为目录块的其余部分是空的，这样它就会继续前进。
 
-树的根总是位于目录的第一个数据块中。按照ext2的惯例，'.'和'..'条目必须出现在此第一个块的开头，所以它们作为两个struct ext4_dir_entry_2放在这里，而不是存储在树中。根节点的其余部分包含有关树的元数据，最后是一个hash->block映射，用于查找htree中较低的节点。如果dx_root.info.indirect_levels不为零，则htree有两个级别；由根节点映射指向的数据块是一个内部节点，由次要哈希索引。该树中的内部节点包含一个全零的struct ext4_dir_entry_2，后面跟着一个minor_hash->block映射，用于查找叶节点。叶节点包含所有struct ext4_dir_entry_2的线性数组；所有这些条目（可能）哈希到相同的值。如果有溢出，条目简单地溢出到下一个叶节点，并设置哈希（在内部节点映射中）的最低有效位，该位使我们到达这个下一个叶节点。
+树的根总是位于目录的第一个数据块中。按照ext2的惯例，'.'和'..'条目必须出现在此第一个块的开头，所以它们作为两个`struct ext4_dir_entry_2`放在这里，而不是存储在树中。根节点的其余部分包含有关树的元数据，最后是一个hash->block映射，用于查找htree中较低的节点。如果`dx_root.info.indirect_levels`不为零，则htree有两个级别；由根节点映射指向的数据块是一个内部节点，由次要哈希索引。该树中的内部节点包含一个全零的`struct ext4_dir_entry_2`，后面跟着一个minor_hash->block映射，用于查找叶节点。叶节点包含所有`struct ext4_dir_entry_2`的线性数组；所有这些条目（可能）哈希到相同的值。如果有溢出，条目简单地溢出到下一个叶节点，并设置哈希（在内部节点映射中）的最低有效位，该位使我们到达这个下一个叶节点。
 
 要将目录作为htree遍历，代码计算所需文件名的哈希并用它来找到相应的块号。如果树是扁平的，该块是可以搜索的目录条目的线性数组；否则，计算文件名的次要哈希并用它对这第二个块进行处理，以找到相应的第三个块号。该第三个块号将是目录条目的线性数组。
 要将目录作为线性数组遍历（如旧代码那样），代码简单地读取目录中的每个数据块。用于htree的块将显示为没有条目（除了'.'和'..'），因此只有叶节点才会显示有任何有趣的内容。
 
-htree的根在struct dx_root中，它是数据块的完整长度：
+htree的根在`struct dx_root`中，它是数据块的完整长度：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __le32 | dot.inode | 此目录的inode号。|
-| 0x4 | __le16 | dot.rec_len | 此记录的长度，12。|
-| 0x6 | u8 | dot.name_len | 名称的长度，1。|
-| 0x7 | u8 | dot.file_type | 此条目的文件类型，0x2（目录）（如果设置了特性标志）。|
-| 0x8 | char | dot.name[4] | ".000"
-| 0xC | __le32 | dotdot.inode | 父目录的inode号。|
-| 0x10 | __le16 | dotdot.rec_len | block_size - 12。记录长度足够长，覆盖所有htree数据。|
-| 0x12 | u8 | dotdot.name_len | 名称的长度，2。|
-| 0x13 | u8 | dotdot.file_type | 此条目的文件类型，0x2（目录）（如果设置了特性标志）。|
-| 0x14 | char | dotdot_name[4] | "..00"|
-| 0x18 | __le32 | struct dx_root_info.reserved_zero | 零。|
-| 0x1C | u8 | struct dx_root_info.hash_version | 哈希类型，请参阅下面的dirhash表。|
-| 0x1D | u8 | struct dx_root_info.info_length | 树信息的长度，0x8。|
-| 0x1E | u8 | struct dx_root_info.indirect_levels | htree的深度。如果设置了INCOMPAT_LARGEDIR特性，则不能大于3；否则不能大于2。|
-| 0x1F | u8 | struct dx_root_info.unused_flags| |
-| 0x20 | __le16 | limit | 可以跟随此头的dx_entries的最大数量，加上头本身的1。|
-| 0x22 | __le16 | count | 实际跟随此头的dx_entries的数量，加上头本身的1。|
-| 0x24 | __le32 | block | 与hash=0对应的块号（在目录文件内）。|
-| 0x28 | struct dx_entry | entries\[0\] | 尽可能多的8字节struct dx_entry，以适应数据块的其余部分。|
+| `0x0` | `__le32` | `dot.inode` | 此目录的inode号。|
+| `0x4` | `__le16` | `dot.rec_len` | 此记录的长度，12。|
+| `0x6` | `u8` | `dot.name_len` | 名称的长度，1。|
+| `0x7` | `u8` | `dot.file_type` | 此条目的文件类型，0x2（目录）（如果设置了特性标志）。|
+| `0x8` | `char` | `dot.name[4]` | ".000"
+| `0xC` | `__le32` | `dotdot.inode` | 父目录的inode号。|
+| `0x10` | `__le16` | `dotdot.rec_len` | block_size - 12。记录长度足够长，覆盖所有htree数据。|
+| `0x12` | `u8` | `dotdot.name_len` | 名称的长度，2。|
+| `0x13` | `u8` | `dotdot.file_type` | 此条目的文件类型，0x2（目录）（如果设置了特性标志）。|
+| `0x14` | `char` | `dotdot_name[4]` | "..00"|
+| `0x18` | `__le32` | `struct dx_root_info.reserved_zero` | 零。|
+| `0x1C` | `u8` | `struct dx_root_info.hash_version` | 哈希类型，请参阅下面的dirhash表。|
+| `0x1D` | `u8` | `struct dx_root_info.info_length` | 树信息的长度，0x8。|
+| `0x1E` | `u8` | `struct dx_root_info.indirect_levels` | htree的深度。如果设置了INCOMPAT_LARGEDIR特性，则不能大于3；否则不能大于2。|
+| `0x1F` | `u8` | `struct dx_root_info.unused_flags`| |
+| `0x20` | `__le16` | `limit` | 可以跟随此头的dx_entries的最大数量，加上头本身的1。|
+| `0x22` | `__le16` | `count` | 实际跟随此头的dx_entries的数量，加上头本身的1。|
+| `0x24` | `__le32` | `block` | 与hash=0对应的块号（在目录文件内）。|
+| `0x28` | `struct dx_entry` | `entries[0]` | 尽可能多的8字节`struct dx_entry`，以适应数据块的其余部分。|
 
 目录哈希是以下值之一：
 
 | 值 | 描述 |
 | -- | -- |
-| 0x0 | 传统。|
-| 0x1 | 半MD4。|
-| 0x2 | Tea。|
-| 0x3 | 传统，无符号。|
-| 0x4 | 半MD4，无符号。|
-| 0x5 | Tea，无符号。|
-| 0x6 | Siphash。|
+| `0x0` | 传统。|
+| `0x1` | 半MD4。|
+| `0x2` | Tea。|
+| `0x3` | 传统，无符号。|
+| `0x4` | 半MD4，无符号。|
+| `0x5` | Tea，无符号。|
+| `0x6` | Siphash。|
 
-htree的内部节点记录为struct dx_node，它也是数据块的完整长度：
+htree的内部节点记录为`struct dx_node`，它也是数据块的完整长度：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __le32 | fake.inode | 零，使其看起来像这个条目未使用。|
-| 0x4 | __le16 | fake.rec_len | 块的大小，为了隐藏所有dx_node数据。|
-| 0x6 | u8 | name_len | 零。这个"未使用"的目录条目没有名称。|
-| 0x7 | u8 | file_type | 零。这个"未使用"的目录条目没有文件类型。|
-| 0x8 | __le16 | limit | 可以跟随此头的dx_entries的最大数量，加上头本身的1。|
-| 0xA | __le16 | count | 实际跟随此头的dx_entries的数量，加上头本身的1。|
-| 0xE | __le32 | block | 与此块最低哈希值对应的块号（在目录文件内）。该值存储在父块中。|
-| 0x12 | struct dx_entry | entries[0] | 尽可能多的8字节struct dx_entry，以适应数据块的其余部分。
+| `0x0` | `__le32` | `fake.inode` | 零，使其看起来像这个条目未使用。|
+| `0x4` | `__le16` | `fake.rec_len` | 块的大小，为了隐藏所有dx_node数据。|
+| `0x6` | `u8` | `name_len` | 零。这个"未使用"的目录条目没有名称。|
+| `0x7` | `u8` | `file_type` | 零。这个"未使用"的目录条目没有文件类型。|
+| `0x8` | `__le16` | `limit` | 可以跟随此头的`dx_entries`的最大数量，加上头本身的1。|
+| `0xA` | `__le16` | `count` | 实际跟随此头的`dx_entries`的数量，加上头本身的1。|
+| `0xE` | `__le32` | `block` | 与此块最低哈希值对应的块号（在目录文件内）。该值存储在父块中。|
+| `0x12` | `struct dx_entry` | `entries[0]` | 尽可能多的8字节`struct dx_entry`，以适应数据块的其余部分。
 
 存在于`struct dx_root`和`struct dx_node`中的哈希映射记录为`struct dx_entry`，长8字节：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __le32 | hash | 哈希码。|
-| 0x4 | __le32 | block | htree中下一个节点的块号（在目录文件内，不是文件系统块）。|
+| `0x0` | `__le32` | `hash` | 哈希码。|
+| `0x4` | `__le32` | `block` | htree中下一个节点的块号（在目录文件内，不是文件系统块）。|
 
 （如果你认为这一切都相当巧妙和特殊，作者也是这么认为的。）
 
-如果启用了元数据校验和，目录块的最后8字节（恰好是一个dx_entry的长度）用于存储struct dx_tail，其中包含校验和。dx_root/dx_node结构中的limit和count条目根据需要调整，以使dx_tail适合块中。如果没有dx_tail的空间，会通知用户运行e2fsck -D重建目录索引（这将确保有校验和的空间）。dx_tail结构长8字节，如下所示：
+如果启用了元数据校验和，目录块的最后8字节（恰好是一个`dx_entry`的长度）用于存储`struct dx_tail`，其中包含校验和。`dx_root/dx_node`结构中的limit和count条目根据需要调整，以使dx_tail适合块中。如果没有dx_tail的空间，会通知用户运行`e2fsck -D`重建目录索引（这将确保有校验和的空间）。dx_tail结构长8字节，如下所示：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | u32 | dt_reserved | 零。|
-| 0x4 | __le32 | dt_checksumhtree | 目录块的校验和。|
+| `0x0` | `u32` | `dt_reserved` | 零。|
+| `0x4` | `__le32` | `dt_checksumhtree` | 目录块的校验和。|
 
-校验和是针对FS UUID、htree索引头（dx_root或dx_node）、所有正在使用的htree索引（dx_entry）和尾块（dx_tail）计算的。
+校验和是针对FS UUID、htree索引头（`dx_root`或`dx_node`）、所有正在使用的htree索引（`dx_entry`）和尾块（`dx_tail`）计算的。
+
+> 根节点块(struct dx_root)：
+> + 包含'.'和'..'条目（占据块开头部分）
+> + 包含根信息结构(dx_root_info)
+> + 包含哈希到块号的映射表(dx_entry数组)
+>
+> 内部节点块(struct dx_node)：
+> + 包含"假"的空目录条目(inode=0)来欺骗旧系统
+> + 包含次级哈希到块号的映射表
+>
+> 叶节点块：
+> + 包含实际的文件目录条目(ext4_dir_entry_2结构的数组)
+> + 所有哈希到相似值的文件条目聚集在同一叶节点
 
 ## 4.4. 扩展属性
 
-扩展属性（xattrs）通常存储在磁盘上的单独数据块中，并通过inode.i_file_acl*从inode引用。扩展属性的首次使用似乎是为了存储文件ACL和其他安全数据（selinux）。使用user_xattr挂载选项，用户可以存储扩展属性，只要所有属性名都以"user"开头；这种限制似乎在Linux 3.0之后消失了。
+扩展属性（xattrs）通常存储在磁盘上的单独数据块中，并通过`inode.i_file_acl*`从inode引用。扩展属性的首次使用似乎是为了存储文件ACL和其他安全数据（selinux）。使用user_xattr挂载选项，用户可以存储扩展属性，只要所有属性名都以"user"开头；这种限制似乎在Linux 3.0之后消失了。
 
 扩展属性可以在两个地方找到。第一个地方是每个inode条目的末尾和下一个inode条目的开始之间。例如，如果inode.i_extra_isize = 28且sb.inode_size = 256，则有256 - (128 + 28) = 100字节可用于inode内扩展属性存储。扩展属性可以找到的第二个地方是inode.i_file_acl指向的块中。截至Linux 3.11，此块不可能包含指向第二个扩展属性块（甚至集群的剩余块）的指针。理论上，每个属性的值可以存储在单独的数据块中，尽管截至Linux 3.11，代码不允许这样做。
 
 键通常被假定为ASCIIZ字符串，而值可以是字符串或二进制数据。
 
-当存储在inode之后时，扩展属性有一个头ext4_xattr_ibody_header，长4字节：
+当存储在inode之后时，扩展属性有一个头`ext4_xattr_ibody_header`，长4字节：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-偏移量类型名称描述0x0__le32h_magic用于识别的魔术数字，0xEA020000。此值由Linux驱动程序设置，尽管e2fsprogs似乎不检查它(?)
+| `0x0` | `__le32` | `h_magic` | 用于识别的魔术数字，`0xEA020000`。此值由Linux驱动程序设置，尽管e2fsprogs似乎不检查它(?)|
 
 扩展属性块的开始在struct ext4_xattr_header中，长32字节：
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __le32 | h_magic | 用于识别的魔术数字，0xEA020000。|
-| 0x4 | __le32 | h_refcount | 引用计数。|
-| 0x8 | __le32 | h_blocks | 使用的磁盘块数。|
-| 0xC | __le32 | h_hash | 所有属性的哈希值。|
-| 0x10 | __le32 | h_checksum | 扩展属性块的校验和。|
-| 0x14 | __u32 | h_reserved\[3\] | 零。|
+| `0x0` | `__le32` | `h_magic` | 用于识别的魔术数字，0xEA020000。|
+| `0x4` | `__le32` | `h_refcount` | 引用计数。|
+| `0x8` | `__le32` | `h_blocks` | 使用的磁盘块数。|
+| `0xC` | `__le32` | `h_hash` | 所有属性的哈希值。|
+| `0x10` | `__le32` | `h_checksum` | 扩展属性块的校验和。|
+| `0x14` | `__u32` | `h_reserved[3]` | 零。|
 
 校验和是针对FS UUID、扩展属性块的64位块号和整个块（头+条目）计算的。
 
-在struct ext4_xattr_header或struct ext4_xattr_ibody_header之后是struct ext4_xattr_entry的数组；这些条目中的每一个至少16字节长。当存储在外部块中时，struct ext4_xattr_entry条目必须按排序顺序存储。排序顺序是e_name_index，然后是e_name_len，最后是e_name。存储在inode内的属性不需要按排序顺序存储。
+在`struct ext4_xattr_header`或`struct ext4_xattr_ibody_header`之后是`struct ext4_xattr_entry`的数组；这些条目中的每一个至少16字节长。当存储在外部块中时，`struct ext4_xattr_entry`条目必须按排序顺序存储。排序顺序是`e_name_index`，然后是`e_name_len`，最后是`e_name`。存储在inode内的属性不需要按排序顺序存储。
 
 | 偏移量 | 大小 | 名称 | 描述 |
 | ------ | ----- | ----- | ----- |
-| 0x0 | __u8 | e_name_len | 名称长度。|
-| 0x1 | __u8 | e_name_index | 属性名索引。下面有关于这个的讨论。|
-| 0x2 | __le16 | e_value_offs | 该属性的值在存储它的磁盘块上的位置。多个属性可以共享相同的值。对于inode属性，此值相对于第一个条目的开始；对于块，此值相对于块的开始（即头）。|
-| 0x4 | __le32 | e_value_inum | 存储值的inode。零表示值与此条目在同一块中。仅当启用INCOMPAT_EA_INODE特性时，才使用此字段。|
-| 0x8 | __le32 | e_value_size | 属性值的长度。|
-| 0xC | __le32 | e_hash | 属性名和属性值的哈希值。内核不更新inode内属性的哈希，所以对于这种情况，此值必须为零，因为e2fsck会验证任何非零哈希，无论xattr位于何处。|
-| 0x10 | char | e_name\[e_name_len\] | 属性名。不包括尾随NULL。|
+| `0x0` | `__u8` | `e_name_len` | 名称长度。|
+| `0x1` | `__u8` | `e_name_index` | 属性名索引。下面有关于这个的讨论。|
+| `0x2` | `__le16` | `e_value_offs` | 该属性的值在存储它的磁盘块上的位置。多个属性可以共享相同的值。对于inode属性，此值相对于第一个条目的开始；对于块，此值相对于块的开始（即头）。|
+| `0x4` | `__le32` | `e_value_inum` | 存储值的inode。零表示值与此条目在同一块中。仅当启用`INCOMPAT_EA_INODE`特性时，才使用此字段。|
+| `0x8` | `__le32` | `e_value_size` | 属性值的长度。|
+| `0xC` | `__le32` | `e_hash` | 属性名和属性值的哈希值。内核不更新inode内属性的哈希，所以对于这种情况，此值必须为零，因为`e2fsck`会验证任何非零哈希，无论xattr位于何处。|
+| `0x10` | `char` | `e_name[e_name_len]` | 属性名。不包括尾随NULL。|
 
-属性值可以跟在条目表的末尾。似乎有一个要求，它们必须对齐到4字节边界。值从块的末尾开始存储，并向xattr_header/xattr_entry表增长。当两者相撞时，溢出被放入单独的磁盘块中。如果磁盘块填满，文件系统返回-ENOSPC。
+属性值可以跟在条目表的末尾。似乎有一个要求，它们必须对齐到4字节边界。值从块的末尾开始存储，并向`xattr_header/xattr_entry`表增长。当两者相撞时，溢出被放入单独的磁盘块中。如果磁盘块填满，文件系统返回-ENOSPC。
 
-ext4_xattr_entry的前四个字段设置为零以标记键列表的结束。
+`ext4_xattr_entry`的前四个字段设置为零以标记键列表的结束。
 
 ### 4.4.1. 属性名索引
 
@@ -503,6 +539,20 @@ ext4_xattr_entry的前四个字段设置为零以标记键列表的结束。
 | 8 | "system.richacl"（仅SuSE内核？） |
 
 例如，如果属性键是"user.fubar"，则属性名索引设置为1，并在磁盘上记录"fubar"名称。
+
+
+> ***工作原理***
+> 
+> **常见前缀映射：**
+> 
+> + 系统定义了一组常见的属性名前缀(如"user."、"security."等)
+> + 每个前缀分配一个数字索引(1、2、3等)
+> 
+> **存储优化：**
+> 
+> + 当存储扩展属性时，系统检查属性名是否以已知前缀开头
+> + 如果匹配，则存储该前缀对应的索引值，并只保存属性名的剩余部分
+> + 如果不匹配任何前缀，则使用索引0，并存储完整属性名
 
 ### 4.4.2. POSIX ACLs
 

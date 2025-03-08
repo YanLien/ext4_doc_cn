@@ -4,4 +4,4 @@ https://www.kernel.org/doc/html/latest/filesystems/ext4/
 * [X] About this Book
 * [X] High Level Design
 * [X] Global Structures
-* [ ] Dynamic Structure
+* [X] Dynamic Structure
